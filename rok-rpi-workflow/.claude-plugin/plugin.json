@@ -1,0 +1,8 @@
+{
+  "name": "rok-rpi-workflow",
+  "version": "1.0.0",
+  "description": "Research-Plan-Implement (R-P-I) development methodology. Three-phase workflow: /1_research gathers information without decisions, /2_plan creates implementation blueprints for approval, /3_implement executes the approved plan with progress tracking. Includes complexity assessment and pre-implementation protocol.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

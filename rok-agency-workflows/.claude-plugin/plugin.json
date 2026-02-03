@@ -1,0 +1,8 @@
+{
+  "name": "rok-agency-workflows",
+  "version": "1.0.0",
+  "description": "ROK Agency client-facing workflows: multi-agent orchestration with dispatch, task delegation with spawn-agent, memory management for cross-session context, and browser automation for UI validation. Coordinates complex multi-project agency work.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

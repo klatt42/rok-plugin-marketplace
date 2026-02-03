@@ -1,0 +1,24 @@
+{
+  "name": "rok-plugin-marketplace",
+  "description": "ROK Copilot plugins for Claude Code: development workflows, session management, R-P-I methodology, and agency orchestration patterns.",
+  "owner": {
+    "name": "ROK Agency"
+  },
+  "plugins": [
+    {
+      "name": "rok-genesis-core",
+      "source": "./rok-genesis-core",
+      "description": "ROK Copilot core conventions: session management, clean compaction, learning capture with diary/reflect, project initialization with Genesis templates (Next.js + Supabase + Tailwind), and development workflow standards."
+    },
+    {
+      "name": "rok-rpi-workflow",
+      "source": "./rok-rpi-workflow",
+      "description": "Research-Plan-Implement (R-P-I) development methodology. Three-phase workflow: research gathers information, plan creates blueprints for approval, implement executes with validation. Includes complexity assessment and pre-implementation protocol."
+    },
+    {
+      "name": "rok-agency-workflows",
+      "source": "./rok-agency-workflows",
+      "description": "Agency workflow patterns: multi-agent orchestration with dispatch, task delegation with spawn-agent, cross-session memory management, browser-based UI validation, PRD generation, and feature list tracking."
+    }
+  ]
+}

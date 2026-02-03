@@ -1,0 +1,8 @@
+{
+  "name": "rok-genesis-core",
+  "version": "3.0.0",
+  "description": "ROK Copilot core conventions: session management, clean compaction, learning capture with diary/reflect, project initialization with Genesis templates (Next.js + Supabase + Tailwind), and R-P-I workflow methodology. Use for all ROK Copilot projects.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}
