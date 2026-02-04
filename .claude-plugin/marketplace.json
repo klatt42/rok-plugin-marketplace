@@ -19,6 +19,11 @@
       "name": "rok-agency-workflows",
       "source": "./rok-agency-workflows",
       "description": "Agency workflow patterns: multi-agent orchestration with dispatch, task delegation with spawn-agent, cross-session memory management, browser-based UI validation, PRD generation, and feature list tracking."
+    },
+    {
+      "name": "adjuster-prospecting",
+      "source": "./adjuster-prospecting",
+      "description": "Insurance adjuster prospecting for restoration companies. Find carrier adjusters by territory, build profiles, draft outreach, and track relationship pipeline. Built for DMV area restoration businesses."
     }
   ]
 }

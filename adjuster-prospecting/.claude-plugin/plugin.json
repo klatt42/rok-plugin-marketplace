@@ -1,0 +1,8 @@
+{
+  "name": "adjuster-prospecting",
+  "version": "1.0.0",
+  "description": "Find insurance carrier adjusters handling restoration losses by geographic territory. Search LinkedIn and public sources, build adjuster profiles, draft outreach, and track relationship pipeline.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}
