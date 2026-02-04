@@ -24,6 +24,11 @@
       "name": "adjuster-prospecting",
       "source": "./adjuster-prospecting",
       "description": "Insurance adjuster prospecting for restoration companies. Find carrier adjusters by territory, build profiles, draft outreach, and track relationship pipeline. Built for DMV area restoration businesses."
+    },
+    {
+      "name": "contractor-prospecting",
+      "source": "./contractor-prospecting",
+      "description": "Contractor referral prospecting for specialty restoration companies. Find GCs and restoration contractors, build profiles, draft partnership outreach, and track referral pipeline. Built for DMV area."
     }
   ]
 }
