@@ -1,0 +1,8 @@
+{
+  "name": "lead-enrichment",
+  "version": "1.0.0",
+  "description": "Enrich business leads with company intelligence, contact discovery, and validation for the restoration industry. Research companies, validate emails and phone numbers, generate enrichment reports, and export to Excel/PDF.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}
