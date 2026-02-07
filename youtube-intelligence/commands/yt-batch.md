@@ -197,6 +197,7 @@ Watch in this order for progressive understanding:
 ---
 
 ## Next Steps
+- Export to HTML/PDF/MD: `/yt-export`
 - Generate implementation brief from top recommendations: `/yt-brief`
 - Deep-dive a specific video: `/yt-analyze url:[url] depth:deep`
 - Browse all analyzed videos: `/yt-library`

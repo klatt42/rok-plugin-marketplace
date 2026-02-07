@@ -252,6 +252,7 @@ Brief saved to: [path]
 Format: [brief/research-input/prd-input]
 
 NEXT STEPS:
+  /yt-export                      # Export to HTML/PDF/MD for review
   /2_plan [path]                  # Start implementation planning
   /create-prd                     # Generate full PRD (reference the brief)
   /1_research [topic]             # Deeper codebase research first

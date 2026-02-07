@@ -1,6 +1,6 @@
 {
   "name": "youtube-intelligence",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "YouTube video analysis and knowledge extraction. Analyze transcripts, summarize insights, validate with research, manage trusted creator profiles, batch-analyze topics, maintain a knowledge library, and generate implementation briefs for Claude Code planning sessions.",
   "author": {
     "name": "ROK Agency"

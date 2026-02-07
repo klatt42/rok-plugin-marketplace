@@ -237,6 +237,7 @@ YOUTUBE INTELLIGENCE ANALYSIS
 ═══════════════════════════════════════════════════════
 
 ## Next Steps
+- Export to HTML/PDF/MD: `/yt-export`
 - Generate implementation brief: `/yt-brief`
 - Save insights to memory: use the /memory-write commands above
 - Analyze related videos: `/yt-batch topic:"[detected topic]"`
