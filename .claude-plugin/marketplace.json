@@ -34,6 +34,16 @@
       "name": "lead-enrichment",
       "source": "./lead-enrichment",
       "description": "Enrich business leads with company intelligence, contact discovery, and validation for the restoration industry. Research companies, validate emails and phone numbers, generate enrichment reports, and export to Excel/PDF."
+    },
+    {
+      "name": "seo-content-optimizer",
+      "source": "./seo-content-optimizer",
+      "description": "Systematic SEO management for large landing page inventories. Batch audit pages, analyze keyword density and cannibalization, generate optimized title tags and meta descriptions, integrate Google Search Console data, and export professional PDF and Excel reports."
+    },
+    {
+      "name": "youtube-intelligence",
+      "source": "./youtube-intelligence",
+      "description": "YouTube video analysis and knowledge extraction. Analyze transcripts, summarize key insights, validate with external research, manage trusted creator profiles, batch-analyze topics, maintain a knowledge library, and generate implementation briefs for Claude Code planning sessions."
     }
   ]
 }
