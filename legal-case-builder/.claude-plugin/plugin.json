@@ -1,0 +1,8 @@
+{
+  "name": "legal-case-builder",
+  "version": "1.0.0",
+  "description": "Legal case builder with MCP-powered document ingestion, timeline generation, evidence search, and claim construction. Ingest PDFs, categorize with AI, search documents, build legal arguments with cited evidence chains.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

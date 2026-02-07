@@ -44,6 +44,11 @@
       "name": "youtube-intelligence",
       "source": "./youtube-intelligence",
       "description": "YouTube video analysis and knowledge extraction. Analyze transcripts, summarize key insights, validate with external research, manage trusted creator profiles, batch-analyze topics, maintain a knowledge library, and generate implementation briefs for Claude Code planning sessions."
+    },
+    {
+      "name": "legal-case-builder",
+      "source": "./legal-case-builder",
+      "description": "Legal case builder with MCP-powered document ingestion, SQLite database, timeline generation, evidence search, and claim construction. Ingest PDFs, categorize with AI, search documents, and build legal arguments with cited evidence chains."
     }
   ]
 }
