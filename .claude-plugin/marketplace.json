@@ -54,6 +54,11 @@
       "name": "deal-management",
       "source": "./deal-management",
       "description": "Pipeline and deal management with configurable stages, scoring, analytics, and forecasting. Track deals, partnerships, and opportunities through customizable pipelines with stage transitions, weighted forecasting, and professional Excel/PDF exports."
+    },
+    {
+      "name": "campaign-management",
+      "source": "./campaign-management",
+      "description": "Email and SMS campaign management with contact database, template library, draft-and-track workflow, drip sequences, A/B testing, and full analytics. Track campaigns from draft through conversion with professional Excel/PDF exports."
     }
   ]
 }

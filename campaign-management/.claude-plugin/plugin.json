@@ -1,0 +1,8 @@
+{
+  "name": "campaign-management",
+  "version": "1.0.0",
+  "description": "Email and SMS campaign management with contact database, templates, sequences, analytics, and A/B testing. Draft-and-track workflow for outreach campaigns.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}
