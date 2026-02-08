@@ -1,0 +1,8 @@
+{
+  "name": "deal-management",
+  "version": "1.0.0",
+  "description": "Pipeline and deal management with configurable stages, scoring, analytics, and forecasting across business groups. Track deals, partnerships, and opportunities through customizable pipelines.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

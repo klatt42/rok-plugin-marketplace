@@ -49,6 +49,11 @@
       "name": "legal-case-builder",
       "source": "./legal-case-builder",
       "description": "Legal case builder with MCP-powered document ingestion, SQLite database, timeline generation, evidence search, and claim construction. Ingest PDFs, categorize with AI, search documents, and build legal arguments with cited evidence chains."
+    },
+    {
+      "name": "deal-management",
+      "source": "./deal-management",
+      "description": "Pipeline and deal management with configurable stages, scoring, analytics, and forecasting. Track deals, partnerships, and opportunities through customizable pipelines with stage transitions, weighted forecasting, and professional Excel/PDF exports."
     }
   ]
 }
