@@ -11,23 +11,44 @@ The user will provide:
 
 ## Process
 
-### Step 1: Fetch the Page
+### Step 1: Fetch the Page (Two-Phase Extraction)
 
-Use WebFetch to retrieve the page content. Extract:
+**IMPORTANT**: WebFetch converts HTML to markdown, which strips `<head>` meta tags. You MUST use both extraction methods for accurate results.
 
-1. **Title tag** — text and character count
-2. **Meta description** — text and character count
-3. **H1-H3 headings** — full hierarchy
-4. **Canonical tag** — URL
-5. **Robots meta** — directives
-6. **Schema/structured data** — types present
-7. **Images** — count, alt text presence
-8. **Internal links** — count and anchor text samples
-9. **External links** — count
-10. **Word count** — total visible content words
-11. **URL structure** — slug analysis
+#### Phase 1: Raw HTML `<head>` Extraction (via curl)
 
-If WebFetch returns limited HTML, note which elements could not be extracted and work with what is available.
+Use Bash to run `curl` and extract all `<head>` meta tags from the raw HTML source. This is the **authoritative source** for technical SEO elements:
+
+```bash
+curl -sL -A "Mozilla/5.0 (compatible; SEOBot/1.0)" "[URL]" | sed -n '/<head/,/<\/head>/p' | head -100
+```
+
+From the raw `<head>` HTML, extract:
+1. **Title tag** — `<title>` text and character count
+2. **Meta description** — `<meta name="description">` content and character count
+3. **Canonical tag** — `<link rel="canonical">` href value
+4. **Robots meta** — `<meta name="robots">` directives
+5. **Open Graph tags** — all `<meta property="og:*">` tags
+6. **Twitter Card tags** — all `<meta name="twitter:*">` tags
+7. **Favicon** — `<link rel="icon">` presence
+8. **Schema/structured data** — `<script type="application/ld+json">` types
+
+If curl returns a redirect or incomplete response, follow the redirect URL and retry.
+
+#### Phase 2: Body Content Analysis (via WebFetch)
+
+Use WebFetch to retrieve the page for body content analysis:
+1. **H1-H3 headings** — full hierarchy, count of each level
+2. **Images** — count, alt text presence
+3. **Internal links** — count and anchor text samples
+4. **External links** — count
+5. **Word count** — total visible content words
+6. **URL structure** — slug analysis
+7. **Content quality** — paragraph structure, readability
+
+#### Merging Results
+
+Combine Phase 1 and Phase 2 data. If there is a conflict between curl (Phase 1) and WebFetch (Phase 2) for any element, **always trust the curl/raw HTML result** — WebFetch's markdown conversion drops `<head>` content.
 
 ### Step 2: Keyword Analysis
 
@@ -123,8 +144,9 @@ If the user chooses to export, dispatch the report-generator agent to construct 
 
 ## Rules
 
+- **Always use curl (Phase 1) as the authoritative source for `<head>` elements** — never rely on WebFetch alone for meta tags, canonical, OG, or Twitter cards
 - Only report what you actually find — never fabricate SEO elements
-- If WebFetch returns incomplete data, clearly state which checks were skipped
+- If curl returns incomplete data (e.g., JS-rendered pages), note this limitation and try WebFetch as fallback
 - Score conservatively — 90+ should be rare
 - Every issue must have a specific, actionable recommendation
 - Present issues sorted by severity (Critical first)

@@ -64,22 +64,42 @@ Proceed with audit?
 
 **Wait for explicit user confirmation.** Do not begin fetching pages without approval.
 
-### Step 4: Execute Audit
+### Step 4: Execute Audit (Two-Phase Extraction)
 
-For each URL, use WebFetch with 1-2 second delays between requests:
+**IMPORTANT**: WebFetch converts HTML to markdown, which strips `<head>` meta tags. For accurate audits, you MUST use curl to extract `<head>` elements from raw HTML.
 
-**Quick audit** extracts:
+#### Extraction Method
+
+For each URL, use a **two-phase approach**:
+
+1. **Phase 1 (curl)**: Fetch raw HTML `<head>` to extract title, meta description, canonical, robots, OG tags, Twitter cards, favicon, schema types
+   ```bash
+   curl -sL -A "Mozilla/5.0 (compatible; SEOBot/1.0)" "[URL]" | sed -n '/<head/,/<\/head>/p' | head -100
+   ```
+2. **Phase 2 (WebFetch)**: Fetch page for body content — headings (H1-H3), word count, links, images, content structure
+
+For **batch efficiency**, you can run multiple curl commands in a single Bash call (one per URL), then use WebFetch for body content as needed per depth level.
+
+If curl and WebFetch disagree on any element, **always trust curl (raw HTML)**.
+
+Rate limit: 1-2 seconds between requests.
+
+#### Depth Levels
+
+**Quick audit** extracts (curl only — fastest):
 - Title tag (text + length)
 - Meta description (text + length)
-- H1 (text + count)
-- Score: based on these 3 elements only
+- H1 (from curl `<head>` is not reliable for H1 — use a quick WebFetch or grep from curl body)
+- Canonical tag presence
+- Robots meta presence
+- Score: based on these technical elements
 
-**Standard audit** extracts (full page-analyzer methodology):
-- All HTML SEO elements
+**Standard audit** extracts (curl + WebFetch per page):
+- All HTML SEO elements from `<head>` (Phase 1)
+- Body content analysis from WebFetch (Phase 2)
 - Content analysis (word count, structure)
 - Keyword density for inferred primary keyword
 - Internal/external link counts
-- Technical checks (canonical, robots, schema)
 - Score: weighted across all 5 categories
 
 **Deep audit** adds:
@@ -143,8 +163,9 @@ If the user chooses to export, dispatch the report-generator agent with the full
 ## Rules
 
 - Always present the APPROVAL GATE before starting
-- Rate limit: 1-2 seconds between WebFetch calls to avoid overwhelming servers
-- If a URL fails to fetch, log it and continue (don't stop the batch)
+- **Always use curl (raw HTML) as the authoritative source for `<head>` meta tags** — never rely on WebFetch alone for meta description, canonical, OG tags, Twitter cards, or robots meta
+- Rate limit: 1-2 seconds between requests to avoid overwhelming servers
+- If a URL fails to fetch via curl, try WebFetch as fallback; log failures and continue
 - Display progress during execution
 - Sort priority pages by score ascending (worst first)
 - For deep audits, ask for GSC approval separately
