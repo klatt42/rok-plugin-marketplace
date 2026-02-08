@@ -1,0 +1,8 @@
+{
+  "name": "production-code-review",
+  "version": "1.0.0",
+  "description": "Comprehensive pre-production code review with 6 specialized subagents analyzing code quality, test coverage, UI/UX, responsive design, security, and performance in parallel. Generates scored reports with production readiness verdict exported to MD, PDF, and HTML.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

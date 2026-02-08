@@ -59,6 +59,11 @@
       "name": "campaign-management",
       "source": "./campaign-management",
       "description": "Email and SMS campaign management with contact database, template library, draft-and-track workflow, drip sequences, A/B testing, and full analytics. Track campaigns from draft through conversion with professional Excel/PDF exports."
+    },
+    {
+      "name": "production-code-review",
+      "source": "./production-code-review",
+      "description": "Comprehensive pre-production code review with 6 specialized subagents analyzing code quality, test coverage, UI/UX, responsive design, security, and performance in parallel. Generates scored reports with production readiness verdict exported to MD, PDF, and HTML."
     }
   ]
 }
