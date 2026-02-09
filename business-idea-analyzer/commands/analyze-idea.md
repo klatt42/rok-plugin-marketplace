@@ -1,9 +1,3 @@
----
-description: Analyze a business idea through multi-dimensional research with parallel agents, producing a ranked opportunity report with scores, ROI projections, and go/no-go recommendations
-argument-hint: <business idea description> [--depth=quick|standard|deep] [--focus=solopreneur|enterprise|both]
-allowed-tools: Bash(ls:*), Bash(python3:*), Bash(rm:*), Read, Glob, Grep, Write, WebSearch, WebFetch, Task, TaskOutput, TodoWrite
----
-
 # Business Idea Analyzer
 
 Analyze a business idea through multi-dimensional market research, competitive analysis, financial modeling, execution assessment, and risk evaluation. Produces a ranked report of 3-5 opportunities with composite scores and go/no-go verdicts.
