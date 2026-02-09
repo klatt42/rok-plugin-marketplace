@@ -47,7 +47,9 @@ Initial Signals:
 - [3-5 bullet points from discovery searches]
 ```
 
-4. **APPROVAL GATE 1**: Present the Idea Context Brief to the user. Ask them to confirm or refine the scope before proceeding. If `quick` depth, skip to Phase 3 Quick Mode.
+4. **Present the Idea Context Brief** to the user. Always show this regardless of depth.
+
+5. **APPROVAL GATE 1** (standard/deep only): Ask the user to confirm or refine the scope before proceeding to Phase 2. For `quick` depth, show the brief but do NOT wait for approval — proceed directly to Quick Mode Protocol (Phase 3).
 
 ### Phase 2: Parallel Agent Dispatch
 
@@ -177,7 +179,9 @@ Wait for user response before proceeding.
 ```
 weighted = (demand * 0.25) + (competitive * 0.20) + (financial * 0.20) + (execution * 0.20) + (risk * 0.15)
 risk_penalty = (critical_kill_criteria * 15) + (high_risks * 5)
-solo_bonus = 5 if (solopreneur_viable AND demand >= 70)
+solo_bonus = 5 if (solopreneur_viable AND raw_demand_score >= 70)
+  # NOTE: Use the RAW market_demand dimension score (0-100), NOT adjusted for competition.
+  # Competition is already captured in the competitive_landscape dimension.
 final = max(0, min(100, round(weighted - risk_penalty + solo_bonus)))
 ```
 
