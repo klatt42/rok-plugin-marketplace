@@ -69,6 +69,11 @@
       "name": "business-idea-analyzer",
       "source": "./business-idea-analyzer",
       "description": "Analyze business ideas through multi-dimensional research with 5 parallel agents evaluating market demand, competitive landscape, financial viability, execution feasibility, and risk. Produces ranked opportunity reports with composite scores, go/no-go verdicts, and exports to MD, PDF, and HTML."
+    },
+    {
+      "name": "business-idea-finder",
+      "source": "./business-idea-finder",
+      "description": "Discover micro-SaaS and AI tool business ideas through pain point mining, gap analysis, and technology arbitrage scanning. Three research modes with scan/explore/deep-scan depth. Profile-filtered for solopreneur builders. Outputs ranked shortlists that feed into business-idea-analyzer."
     }
   ]
 }
