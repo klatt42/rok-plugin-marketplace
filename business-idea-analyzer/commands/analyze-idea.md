@@ -59,31 +59,60 @@ Initial Signals:
 
 Launch 5 analysis agents simultaneously in a SINGLE message using `Task` with `run_in_background: true`:
 
-| Agent | Subagent Type | Model | Dimension |
-|-------|--------------|-------|-----------|
-| market-demand-analyst | general-purpose | opus | Market Demand (25%) |
-| competitive-landscape-analyst | general-purpose | opus | Competitive Landscape (20%) |
-| financial-viability-analyst | general-purpose | sonnet | Financial Viability (20%) |
-| execution-feasibility-analyst | general-purpose | sonnet | Execution Feasibility (20%) |
-| risk-analyst | general-purpose | opus | Risk Assessment (15%) |
+| Agent | Subagent Type | Model | Dimension | Model Rationale |
+|-------|--------------|-------|-----------|-----------------|
+| market-demand-analyst | general-purpose | opus | Market Demand (25%) | Needs nuanced judgment to distinguish genuine demand signals from noise in unstructured Reddit/forum data |
+| competitive-landscape-analyst | general-purpose | opus | Competitive Landscape (20%) | Requires strategic reasoning to identify indirect competitors and assess moat potential |
+| financial-viability-analyst | general-purpose | sonnet | Financial Viability (20%) | Primarily formula-driven (TAM waterfall, ARPU calc); structured math doesn't need opus-level reasoning |
+| execution-feasibility-analyst | general-purpose | sonnet | Execution Feasibility (20%) | Tech stack assessment and timeline estimation follow well-defined heuristics |
+| risk-analyst | general-purpose | opus | Risk Assessment (15%) | Devil's advocate reasoning, historical analogy identification, and black swan thinking require strongest reasoning |
 
 **For each agent prompt, include**:
 1. The full Idea Context Brief
-2. The agent's specific instructions (read from the agent definition file)
+2. The agent's specific instructions (read from the agent definition file at `agents/[agent-name].md` relative to this command)
 3. Depth-specific guidance:
    - `standard`: "Perform 6-10 WebSearch queries. Focus on the most impactful findings."
-   - `deep`: "Perform 10-15 WebSearch queries. Be thorough and explore edge cases."
+   - `deep`: "Perform 10-15 WebSearch queries. Be thorough — explore edge cases, adjacent markets, historical precedents, and contrarian perspectives."
 
-**Quick Mode** (depth=quick): Skip agents entirely. Instead, perform 5-8 WebSearch queries directly and produce a rough scoring based on search results alone. Output a simple table in chat (no export).
+**Quick Mode** (depth=quick): Skip agents entirely. Perform 5-8 WebSearch queries directly and produce a rough assessment. See Quick Mode Protocol below.
 
 ### Phase 3: Synthesis & Scoring
 
 1. **Collect results**: Use `TaskOutput` with `block=true` for each of the 5 agents. Handle failures gracefully -- if an agent fails, assign that dimension a default score of 50 and note "analysis unavailable" in the summary.
 
-2. **Launch report-synthesizer**: Use `Task` to launch the report-synthesizer agent (model: sonnet) with:
-   - All 5 agent JSON outputs concatenated
-   - The export script path: the plugin's `scripts/business_analysis_export.py` located relative to this command file
-   - Instructions to identify 3-5 distinct opportunities, score each, and produce the export JSON
+2. **Launch report-synthesizer**: You MUST launch the report-synthesizer agent. Do NOT synthesize the results yourself — the synthesizer agent has specific scoring logic, cross-agent consistency checks, and export payload construction that must be executed.
+
+   Use `Task` (subagent_type: `general-purpose`, model: `sonnet`) with this prompt structure:
+   ```
+   You are the report-synthesizer agent. Read your instructions from:
+   [path to agents/report-synthesizer.md relative to this command]
+
+   Here are the 5 research agent outputs to synthesize:
+
+   === MARKET DEMAND ===
+   [paste market-demand-analyst JSON output]
+
+   === COMPETITIVE LANDSCAPE ===
+   [paste competitive-landscape-analyst JSON output]
+
+   === FINANCIAL VIABILITY ===
+   [paste financial-viability-analyst JSON output]
+
+   === EXECUTION FEASIBILITY ===
+   [paste execution-feasibility-analyst JSON output]
+
+   === RISK ASSESSMENT ===
+   [paste risk-analyst JSON output]
+
+   Idea Context Brief:
+   [paste the Idea Context Brief from Phase 1]
+
+   Export script path: [absolute path to scripts/business_analysis_export.py]
+
+   Follow your instructions to identify 3-5 opportunities, score each, build the export JSON, write it to /tmp/business_analysis_export.json, and execute the export script.
+   ```
+
+   **IMPORTANT**: The synthesizer's export JSON schema MUST match the schema in this command (see Export JSON Schema below). The synthesizer has been updated with the authoritative schema.
 
 3. **APPROVAL GATE 2** (standard/deep only): Before final export, present the ranked opportunities:
 
@@ -214,13 +243,76 @@ The report-synthesizer produces JSON with this structure:
 }
 ```
 
+## Quick Mode Protocol (depth=quick)
+
+Quick mode skips agents entirely for a fast directional assessment in 5-10 minutes.
+
+**Process**:
+1. Run 5-8 WebSearch queries directly (demand signals, competitors, pricing, market size)
+2. Score each dimension 0-100 based on search results alone (less precise, wider confidence intervals)
+3. Apply the same composite formula and verdict thresholds
+4. Present results in chat only — no export, no file generation
+
+**Quick Mode Output** (display in chat):
+```
+## Quick Assessment: [Idea]
+
+| Dimension | Score | Confidence | Notes |
+|-----------|-------|------------|-------|
+| Market Demand | 72 | Low | Some Reddit signals, unvalidated |
+| Competitive Landscape | 65 | Medium | 3 competitors found |
+| Financial Viability | 60 | Low | No detailed TAM calc |
+| Execution Feasibility | 75 | Medium | Standard tech stack |
+| Risk Assessment | 55 | Low | Surface-level only |
+
+**Composite**: 66 | **Verdict**: GO (low confidence)
+
+**Caveat**: Quick assessments have wider error margins (+/-15 points).
+Run with --depth=standard for validated scoring with full agent analysis.
+
+**Key Findings**: [3-5 bullets from search results]
+**Obvious Risks**: [2-3 bullets]
+**Recommendation**: [1 sentence: worth deeper analysis or redirect effort]
+```
+
+**Quick mode does NOT produce**:
+- Export files (MD/PDF/HTML)
+- Pain point severity scores
+- TAM/SAM/SOM calculations
+- Feature matrices
+- Kill criteria inventories
+
+## Deep Mode Deliverables (depth=deep)
+
+Deep mode extends standard mode with additional research and an automatic deep-dive on the top opportunity.
+
+**Additional vs Standard**:
+| Feature | Standard | Deep |
+|---------|----------|------|
+| Queries per agent | 6-10 | 10-15 |
+| Agent instructions | "Focus on most impactful" | "Explore edge cases, adjacent markets, historical precedents, contrarian views" |
+| Opportunities identified | 3-5 | 3-5 (with more nuance) |
+| Auto deep-dive | No | Yes — top opportunity gets /idea-deep-dive treatment |
+| Export | MD + PDF + HTML | MD + PDF + HTML (richer content) |
+
+**Deep Mode Auto Deep-Dive** (after Phase 4 export):
+After the standard export completes, automatically produce a deep-dive section for the #1 ranked opportunity:
+1. Competitive feature matrix with 8+ features and all identified competitors
+2. Pain point severity ranking (top 5 by severity score)
+3. MVP specification: core features (must-have) vs nice-to-have vs v2
+4. Pricing tier analysis: Free, Pro, Enterprise with feature breakdown
+5. Go-to-market strategy outline (4 phases: pre-launch, launch, growth, scale)
+6. "Build first" list: the 3 things to build/validate before anything else
+
+This deep-dive content is appended to the export JSON under an `"auto_deep_dive"` key and included in the exported files.
+
 ## Token Budget
 
-| Depth | Phase 1 | Phase 2 | Phase 3 | Phase 4 | Total |
-|-------|---------|---------|---------|---------|-------|
-| quick | ~2K | 0 | ~2K | ~1K | ~5K |
-| standard | ~2K | ~60K | ~5K | ~2K | ~69K |
-| deep | ~2K | ~100K | ~8K | ~3K | ~113K |
+| Depth | Phase 1 | Phase 2 | Phase 3 | Phase 4 | Deep-Dive | Total |
+|-------|---------|---------|---------|---------|-----------|-------|
+| quick | ~2K | 0 | ~2K | ~1K | 0 | ~5K |
+| standard | ~2K | ~60K | ~5K | ~2K | 0 | ~69K |
+| deep | ~2K | ~100K | ~8K | ~3K | ~15K | ~128K |
 
 ## Rules
 

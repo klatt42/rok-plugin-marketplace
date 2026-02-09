@@ -500,7 +500,9 @@ def _pdf_section_header(pdf, title):
     pdf.set_text_color(*TEAL_RGB)
     pdf.set_font("Helvetica", "B", 12)
     pdf.cell(0, 8, latin_safe(title), new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(1)
+    pdf.set_draw_color(226, 232, 240)
+    pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+    pdf.ln(3)
 
 
 def _pdf_table_header(pdf, headers, widths):
@@ -512,12 +514,124 @@ def _pdf_table_header(pdf, headers, widths):
     pdf.ln()
 
 
+def _pdf_verdict_badge(pdf, verdict, x=None):
+    """Draw a colored verdict badge at current position or specified x."""
+    vrgb = VERDICT_RGB.get(verdict, VERDICT_RGB["NO_GO"])
+    vc = VERDICT_COLORS.get(verdict, VERDICT_COLORS["NO_GO"])
+    label = vc["label"]
+    pdf.set_font("Helvetica", "B", 8)
+    w = pdf.get_string_width(label) + 10
+    if x is not None:
+        pdf.set_x(x)
+    pdf.set_fill_color(*vrgb)
+    pdf.set_text_color(255, 255, 255)
+    y = pdf.get_y()
+    pdf.rect(pdf.get_x(), y, w, 5, style="F")
+    pdf.cell(w, 5, label, align="C")
+    pdf.set_text_color(60, 60, 60)
+    return w
+
+
+def _pdf_score_bar(pdf, score, x, y, bar_width=60, bar_height=4):
+    """Draw a colored score bar at (x, y)."""
+    # Background track
+    pdf.set_fill_color(241, 245, 249)
+    pdf.rect(x, y, bar_width, bar_height, style="F")
+    # Score fill
+    if score >= 80:
+        r, g, b = 5, 150, 105
+    elif score >= 65:
+        r, g, b = 13, 148, 136
+    elif score >= 50:
+        r, g, b = 217, 119, 6
+    else:
+        r, g, b = 220, 38, 38
+    fill_width = max(2, bar_width * score / 100)
+    pdf.set_fill_color(r, g, b)
+    pdf.rect(x, y, fill_width, bar_height, style="F")
+
+
+def _pdf_risk_severity_cell(pdf, severity, width):
+    """Draw a severity cell with colored background."""
+    sev = severity.lower()
+    colors = {
+        "critical": (254, 226, 226, 153, 27, 27),
+        "high": (255, 247, 237, 154, 52, 18),
+        "medium": (254, 252, 232, 133, 77, 14),
+        "low": (240, 253, 244, 22, 101, 52),
+    }
+    bg_r, bg_g, bg_b, t_r, t_g, t_b = colors.get(sev, colors["medium"])
+    pdf.set_fill_color(bg_r, bg_g, bg_b)
+    pdf.set_text_color(t_r, t_g, t_b)
+    pdf.set_font("Helvetica", "B", 7.5)
+    pdf.cell(width, 5.5, sev.upper(), border=1, fill=True, align="C")
+    pdf.set_text_color(60, 60, 60)
+    pdf.set_font("Helvetica", "", 7.5)
+
+
+def _pdf_tam_cards(pdf, tam):
+    """Draw TAM/SAM/SOM as side-by-side cards."""
+    labels = [("TAM", "total_addressable"), ("SAM", "serviceable_addressable"),
+              ("SOM Y1", "obtainable_y1"), ("SOM Y3", "obtainable_y3")]
+    card_w = (pdf.w - pdf.l_margin - pdf.r_margin - 9) / 4  # 3mm gaps
+    start_x = pdf.l_margin
+    y = pdf.get_y()
+    for i, (label, key) in enumerate(labels):
+        x = start_x + i * (card_w + 3)
+        # Card background
+        pdf.set_fill_color(240, 253, 250)
+        pdf.rect(x, y, card_w, 14, style="F")
+        # Label
+        pdf.set_xy(x, y + 1)
+        pdf.set_font("Helvetica", "", 6)
+        pdf.set_text_color(*TEAL_RGB)
+        pdf.cell(card_w, 4, label, align="C")
+        # Value
+        pdf.set_xy(x, y + 5)
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(15, 118, 110)
+        val = latin_safe(tam.get(key, "N/A"))
+        pdf.cell(card_w, 8, val, align="C")
+    pdf.set_y(y + 17)
+    pdf.set_text_color(60, 60, 60)
+
+
 def generate_pdf(data: dict, output_path: str):
     pdf = BusinessAnalysisPDF(data)
     pdf.alias_nb_pages()
     pdf.add_page()
 
     opportunities = data.get("opportunities", [])
+
+    # -- Big score + verdict for top opportunity --
+    if opportunities:
+        top = opportunities[0]
+        score = top.get("composite_score", 0)
+        verdict = top.get("verdict", "NO_GO")
+
+        # Large centered score
+        pdf.set_font("Helvetica", "B", 36)
+        vrgb = VERDICT_RGB.get(verdict, VERDICT_RGB["NO_GO"])
+        pdf.set_text_color(*vrgb)
+        pdf.cell(0, 18, f"{score}/100", align="C", new_x="LMARGIN", new_y="NEXT")
+
+        # Verdict badge centered
+        vc = VERDICT_COLORS.get(verdict, VERDICT_COLORS["NO_GO"])
+        label = vc["label"]
+        pdf.set_font("Helvetica", "B", 11)
+        badge_w = pdf.get_string_width(label) + 16
+        badge_x = (pdf.w - badge_w) / 2
+        pdf.set_fill_color(*vrgb)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_x(badge_x)
+        pdf.cell(badge_w, 8, label, fill=True, align="C", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(2)
+
+        # Subtitle
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(100, 116, 139)
+        pdf.cell(0, 5, latin_safe(f"Top Opportunity: {top.get('name', '')}  |  MVP: {top.get('mvp_timeline', 'TBD')}  |  Pricing: {top.get('recommended_pricing', 'TBD')}"), align="C", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(6)
 
     # -- Opportunity Rankings Table --
     if opportunities:
@@ -534,34 +648,58 @@ def generate_pdf(data: dict, output_path: str):
                 pdf.set_fill_color(255, 255, 255)
 
             v = opp.get("verdict", "NO_GO")
-            vrgb = VERDICT_RGB.get(v, VERDICT_RGB["NO_GO"])
             pdf.set_text_color(60, 60, 60)
             pdf.cell(widths[0], 6, str(opp.get("rank", "")), border=1, fill=True, align="C")
             pdf.cell(widths[1], 6, truncate(opp.get("name", ""), 35), border=1, fill=True)
+
+            # Score with color
+            s = opp.get("composite_score", 0)
+            vrgb = VERDICT_RGB.get(v, VERDICT_RGB["NO_GO"])
             pdf.set_text_color(*vrgb)
             pdf.set_font("Helvetica", "B", 9)
-            pdf.cell(widths[2], 6, str(opp.get("composite_score", 0)), border=1, fill=True, align="C")
-            pdf.set_font("Helvetica", "", 8)
+            pdf.cell(widths[2], 6, str(s), border=1, fill=True, align="C")
+
+            # Verdict badge in cell
             vc = VERDICT_COLORS.get(v, VERDICT_COLORS["NO_GO"])
+            pdf.set_fill_color(*vrgb)
+            pdf.set_text_color(255, 255, 255)
+            pdf.set_font("Helvetica", "B", 7)
             pdf.cell(widths[3], 6, vc["label"], border=1, fill=True, align="C")
+
+            # Reset for remaining cells
+            if idx % 2 == 0:
+                pdf.set_fill_color(248, 250, 252)
+            else:
+                pdf.set_fill_color(255, 255, 255)
             pdf.set_text_color(60, 60, 60)
+            pdf.set_font("Helvetica", "", 8)
             solo = "Yes" if opp.get("solopreneur_viable") else "No"
             pdf.cell(widths[4], 6, solo, border=1, fill=True, align="C")
             pdf.cell(widths[5], 6, truncate(opp.get("recommended_pricing", ""), 28), border=1, fill=True)
             pdf.ln()
         pdf.ln(4)
 
-    # -- Top Opportunity Detail --
+    # -- Top Opportunity Dimension Scores with Bars --
     if opportunities:
         top = opportunities[0]
-        _pdf_section_header(pdf, f"Top: {truncate(top.get('name', ''), 50)}")
+        _pdf_section_header(pdf, f"Score Breakdown: {truncate(top.get('name', ''), 45)}")
 
-        # Dimension scores
-        dim_headers = ["Dimension", "Score", "Weight"]
-        dim_widths = [55, 70, 30]
-        _pdf_table_header(pdf, dim_headers, dim_widths)
+        label_w = 50
+        bar_w = 80
+        score_w = 20
+        wt_w = 20
+        total_w = label_w + bar_w + score_w + wt_w
 
-        pdf.set_font("Helvetica", "", 9)
+        # Header
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.set_fill_color(*TEAL_RGB)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(label_w, 6, "Dimension", border=1, fill=True)
+        pdf.cell(bar_w, 6, "Score", border=1, fill=True, align="C")
+        pdf.cell(score_w, 6, "Value", border=1, fill=True, align="C")
+        pdf.cell(wt_w, 6, "Weight", border=1, fill=True, align="C")
+        pdf.ln()
+
         for idx, dim in enumerate(top.get("dimensions", [])):
             ds = dim.get("score", 0)
             dn = latin_safe(dim.get("name", ""))
@@ -572,56 +710,116 @@ def generate_pdf(data: dict, output_path: str):
             else:
                 pdf.set_fill_color(255, 255, 255)
 
+            row_y = pdf.get_y()
+            pdf.set_font("Helvetica", "", 8)
+            pdf.set_text_color(60, 60, 60)
+            pdf.cell(label_w, 7, f"  {dn}", border=1, fill=True)
+
+            # Score bar cell
+            bar_x = pdf.get_x()
+            pdf.cell(bar_w, 7, "", border=1, fill=True)
+            _pdf_score_bar(pdf, ds, bar_x + 4, row_y + 1.5, bar_w - 8, 4)
+
+            # Score value with color
             if ds >= 80:
                 pdf.set_text_color(6, 95, 70)
             elif ds >= 65:
                 pdf.set_text_color(133, 77, 14)
             else:
                 pdf.set_text_color(153, 27, 27)
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.cell(score_w, 7, str(ds), border=1, fill=True, align="C")
 
-            pdf.cell(dim_widths[0], 6, f"  {dn}", border=1, fill=True)
-            pdf.cell(dim_widths[1], 6, str(ds), border=1, fill=True, align="C")
-            pdf.set_text_color(60, 60, 60)
-            pdf.cell(dim_widths[2], 6, f"{int(wt * 100)}%", border=1, fill=True, align="C")
+            pdf.set_text_color(100, 116, 139)
+            pdf.set_font("Helvetica", "", 8)
+            pdf.cell(wt_w, 7, f"{int(wt * 100)}%", border=1, fill=True, align="C")
             pdf.ln()
+
         pdf.ln(4)
 
-        # TAM
+        # TAM cards
         tam = top.get("tam", {})
         if tam:
             pdf.set_text_color(*TEAL_RGB)
             pdf.set_font("Helvetica", "B", 10)
             pdf.cell(0, 6, "Market Sizing", new_x="LMARGIN", new_y="NEXT")
-            pdf.set_font("Helvetica", "", 9)
-            pdf.set_text_color(40, 40, 40)
-            pdf.cell(0, 5, latin_safe(f"TAM: {tam.get('total_addressable', 'N/A')}  |  SAM: {tam.get('serviceable_addressable', 'N/A')}  |  SOM Y1: {tam.get('obtainable_y1', 'N/A')}  |  SOM Y3: {tam.get('obtainable_y3', 'N/A')}"), new_x="LMARGIN", new_y="NEXT")
-            pdf.ln(4)
+            pdf.ln(2)
+            _pdf_tam_cards(pdf, tam)
+            pdf.ln(2)
 
-        # Top risks
+        # Key findings per dimension
+        for dim in top.get("dimensions", []):
+            findings = dim.get("key_findings", [])
+            if findings:
+                pdf.set_text_color(*TEAL_RGB)
+                pdf.set_font("Helvetica", "B", 9)
+                pdf.cell(0, 5, latin_safe(dim.get("name", "")), new_x="LMARGIN", new_y="NEXT")
+                pdf.set_font("Helvetica", "", 8)
+                pdf.set_text_color(60, 60, 60)
+                for f in findings:
+                    pdf.set_x(pdf.l_margin + 4)
+                    pdf.multi_cell(0, 4, latin_safe(f"- {f}"))
+                pdf.ln(1)
+        pdf.ln(2)
+
+        # Top risks with severity coloring
         risks = top.get("top_risks", [])
         if risks:
+            _pdf_section_header(pdf, "Top Risks")
+            for r in risks:
+                sev = r.get("severity", "medium").lower()
+                colors = {
+                    "critical": (254, 226, 226, 153, 27, 27),
+                    "high": (255, 247, 237, 154, 52, 18),
+                    "medium": (254, 252, 232, 133, 77, 14),
+                    "low": (240, 253, 244, 22, 101, 52),
+                }
+                bg_r, bg_g, bg_b, t_r, t_g, t_b = colors.get(sev, colors["medium"])
+
+                # Severity tag
+                pdf.set_fill_color(bg_r, bg_g, bg_b)
+                pdf.set_text_color(t_r, t_g, t_b)
+                pdf.set_font("Helvetica", "B", 7)
+                tag_w = pdf.get_string_width(sev.upper()) + 6
+                pdf.cell(tag_w, 5, sev.upper(), fill=True)
+                pdf.set_font("Helvetica", "", 8)
+                pdf.set_text_color(60, 60, 60)
+                pdf.cell(3, 5, "")
+                pdf.multi_cell(0, 5, latin_safe(r.get("risk", "")))
+                if r.get("mitigation"):
+                    pdf.set_font("Helvetica", "I", 7)
+                    pdf.set_text_color(100, 116, 139)
+                    pdf.set_x(pdf.l_margin + tag_w + 3)
+                    pdf.multi_cell(0, 4, latin_safe(f"Mitigation: {r.get('mitigation', '')}"))
+                pdf.set_text_color(60, 60, 60)
+                pdf.ln(2)
+            pdf.ln(2)
+
+        # Kill criteria
+        kcs = top.get("kill_criteria", [])
+        if kcs:
             pdf.set_text_color(*TEAL_RGB)
             pdf.set_font("Helvetica", "B", 10)
-            pdf.cell(0, 6, "Top Risks", new_x="LMARGIN", new_y="NEXT")
+            pdf.cell(0, 6, "Kill Criteria", new_x="LMARGIN", new_y="NEXT")
             pdf.set_font("Helvetica", "", 8)
-            pdf.set_text_color(40, 40, 40)
-            for r in risks:
-                sev = r.get("severity", "medium").upper()
-                pdf.multi_cell(0, 4.5, latin_safe(f"  [{sev}] {r.get('risk', '')} -- Mitigation: {r.get('mitigation', '')}"))
+            pdf.set_text_color(60, 60, 60)
+            for kc in kcs:
+                status = kc.get("status", "unverified")
+                icon = "[x]" if status != "unverified" else "[ ]"
+                pdf.multi_cell(0, 4.5, latin_safe(f"  {icon} {kc.get('assumption', '')} -- Kill if: {kc.get('kill_condition', '')}"))
                 pdf.ln(1)
             pdf.ln(2)
 
         # Next steps
         steps = top.get("next_steps", [])
         if steps:
-            pdf.set_text_color(*TEAL_RGB)
-            pdf.set_font("Helvetica", "B", 10)
-            pdf.cell(0, 6, "Next Steps", new_x="LMARGIN", new_y="NEXT")
+            _pdf_section_header(pdf, "Next Steps")
             pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(40, 40, 40)
             for i, step in enumerate(steps, 1):
                 pdf.multi_cell(0, 5, latin_safe(f"  {i}. {step}"))
                 pdf.ln(1)
+            pdf.ln(2)
 
     # -- Executive Summary --
     _pdf_section_header(pdf, "Executive Summary")
@@ -629,6 +827,64 @@ def generate_pdf(data: dict, output_path: str):
     pdf.set_text_color(40, 40, 40)
     pdf.multi_cell(0, 5, latin_safe(data.get("executive_summary", "")))
     pdf.ln(4)
+
+    # -- Competitors --
+    competitors = data.get("competitive_analysis", {}).get("competitors", [])
+    if competitors:
+        _pdf_section_header(pdf, "Competitive Landscape")
+        c_headers = ["Competitor", "Pricing", "Strengths", "Weaknesses"]
+        c_widths = [35, 25, 55, 55]
+        _pdf_table_header(pdf, c_headers, c_widths)
+
+        pdf.set_font("Helvetica", "", 7.5)
+        for idx, comp in enumerate(competitors):
+            if idx % 2 == 0:
+                pdf.set_fill_color(248, 250, 252)
+            else:
+                pdf.set_fill_color(255, 255, 255)
+            pdf.set_text_color(60, 60, 60)
+            pdf.cell(c_widths[0], 5.5, truncate(comp.get("name", ""), 22), border=1, fill=True)
+            pdf.cell(c_widths[1], 5.5, truncate(comp.get("pricing", ""), 16), border=1, fill=True)
+            pdf.cell(c_widths[2], 5.5, truncate(", ".join(comp.get("strengths", [])), 38), border=1, fill=True)
+            pdf.cell(c_widths[3], 5.5, truncate(", ".join(comp.get("weaknesses", [])), 38), border=1, fill=True)
+            pdf.ln()
+        pdf.ln(4)
+
+    # -- Pain Points --
+    pain_points = data.get("market_research", {}).get("pain_points", [])
+    if pain_points:
+        _pdf_section_header(pdf, "Pain Points")
+        p_headers = ["Pain Point", "Severity", "Frequency", "Segment"]
+        p_widths = [65, 20, 25, 60]
+        _pdf_table_header(pdf, p_headers, p_widths)
+
+        pdf.set_font("Helvetica", "", 7.5)
+        for idx, pp in enumerate(pain_points):
+            if idx % 2 == 0:
+                pdf.set_fill_color(248, 250, 252)
+            else:
+                pdf.set_fill_color(255, 255, 255)
+
+            pdf.set_text_color(60, 60, 60)
+            pdf.cell(p_widths[0], 5.5, truncate(pp.get("description", ""), 44), border=1, fill=True)
+
+            # Severity with color
+            sev_val = pp.get("severity", 0)
+            if sev_val >= 80:
+                pdf.set_text_color(153, 27, 27)
+            elif sev_val >= 60:
+                pdf.set_text_color(154, 52, 18)
+            else:
+                pdf.set_text_color(133, 77, 14)
+            pdf.set_font("Helvetica", "B", 8)
+            pdf.cell(p_widths[1], 5.5, str(sev_val), border=1, fill=True, align="C")
+
+            pdf.set_text_color(60, 60, 60)
+            pdf.set_font("Helvetica", "", 7.5)
+            pdf.cell(p_widths[2], 5.5, truncate(pp.get("frequency", ""), 16), border=1, fill=True, align="C")
+            pdf.cell(p_widths[3], 5.5, truncate(pp.get("affected_segment", ""), 40), border=1, fill=True)
+            pdf.ln()
+        pdf.ln(4)
 
     # -- Risk Register --
     if risk_register := data.get("risk_register", []):
@@ -646,8 +902,7 @@ def generate_pdf(data: dict, output_path: str):
             pdf.set_text_color(60, 60, 60)
             pdf.cell(r_widths[0], 5.5, risk.get("id", ""), border=1, fill=True)
             pdf.cell(r_widths[1], 5.5, truncate(risk.get("category", ""), 16), border=1, fill=True)
-            sev = risk.get("severity", "medium").upper()
-            pdf.cell(r_widths[2], 5.5, sev, border=1, fill=True, align="C")
+            _pdf_risk_severity_cell(pdf, risk.get("severity", "medium"), r_widths[2])
             pdf.cell(r_widths[3], 5.5, truncate(risk.get("description", ""), 70), border=1, fill=True)
             pdf.ln()
         pdf.ln(4)

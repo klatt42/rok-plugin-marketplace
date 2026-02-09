@@ -99,6 +99,8 @@ If the export script path is not provided, write the JSON to `/tmp/business_anal
 
 ## Export Payload Structure
 
+**CRITICAL**: This schema MUST match the export script (`business_analysis_export.py`) exactly. The export script is the authoritative consumer of this JSON. Use this schema verbatim.
+
 Return ONLY valid JSON (no markdown wrapping):
 ```json
 {
@@ -106,76 +108,49 @@ Return ONLY valid JSON (no markdown wrapping):
   "idea_description": "Original idea description as provided by user",
   "date": "YYYY-MM-DD",
   "depth": "quick|standard|deep",
-  "operator_profile": "solopreneur|small_team|funded_startup",
-  "executive_summary": {
-    "verdict": "STRONG_GO|GO|CONDITIONAL|NO_GO|BLOCKED",
-    "composite_score": 72,
-    "one_liner": "Single sentence summarizing the opportunity and recommendation",
-    "key_strengths": ["strength1", "strength2"],
-    "key_risks": ["risk1", "risk2"],
-    "recommended_next_steps": ["step1", "step2", "step3"]
-  },
+  "operator_profile": "solopreneur",
+  "executive_summary": "2-3 paragraph text summary (STRING, not object). Include overall verdict, key strengths, key risks, and recommended path forward.",
   "opportunities": [
     {
       "rank": 1,
       "name": "Opportunity Variant Name",
       "description": "2-3 sentence description of this approach",
-      "target_segment": "Who this variant targets",
-      "differentiation": "What makes this variant unique",
-      "scores": {
-        "market_demand": 75,
-        "competitive_landscape": 68,
-        "financial_viability": 70,
-        "execution_feasibility": 80,
-        "risk_assessment": 62
-      },
-      "weighted_score": 71.3,
-      "risk_penalty": 5,
-      "solo_bonus": 5,
-      "final_score": 71,
-      "verdict": "GO",
-      "critical_kill_criteria": 0,
-      "high_risks": 1,
-      "key_advantage": "Primary advantage of this variant",
-      "key_concern": "Primary concern for this variant"
+      "verdict": "STRONG_GO",
+      "composite_score": 82,
+      "dimensions": [
+        {"name": "Market Demand", "key": "market_demand", "score": 85, "weight": 0.25, "summary": "1-2 sentence summary", "key_findings": ["finding1", "finding2", "finding3"]}
+      ],
+      "tam": {"total_addressable": "$500M", "serviceable_addressable": "$120M", "obtainable_y1": "$210K", "obtainable_y3": "$2.1M"},
+      "solopreneur_viable": true,
+      "mvp_timeline": "4-6 weeks",
+      "recommended_pricing": "$29-49/mo",
+      "top_risks": [{"risk": "Description of risk", "severity": "high", "mitigation": "How to mitigate"}],
+      "kill_criteria": [{"assumption": "What must be true", "kill_condition": "What kills the idea", "status": "unverified"}],
+      "next_steps": ["Step 1", "Step 2", "Step 3"]
     }
   ],
   "market_research": {
-    "demand_signals_count": 8,
-    "pain_points_count": 5,
-    "top_pain_point": "Description of the highest-severity pain point",
-    "market_size": "TAM estimate with source",
-    "sentiment": "Overall market sentiment summary"
+    "pain_points": [{"description": "Pain point text", "severity": 85, "frequency": "daily", "affected_segment": "Who is affected", "economic_impact": "Cost in time/money"}],
+    "demand_signals": [{"signal": "Signal description", "strength": "strong", "source": "Reddit", "confidence": 90}],
+    "sources_consulted": 25
   },
   "competitive_analysis": {
-    "competitors_found": 4,
-    "market_maturity": "nascent|growing|mature|saturated",
-    "biggest_gap": "The most significant gap in the competitive landscape",
-    "strongest_competitor": "Name and why they are the biggest threat",
-    "moat_opportunity": "Best moat strategy identified"
+    "competitors": [{"name": "Competitor Name", "pricing": "$39/mo", "strengths": ["str1", "str2"], "weaknesses": ["weak1", "weak2"]}],
+    "feature_matrix": {"features": ["Feature 1", "Feature 2"], "competitors": {"Comp A": [true, false], "Proposed": [true, true]}},
+    "gap_summary": "Summary of gaps in competitive landscape"
   },
-  "risk_register": {
-    "total_risks": 8,
-    "critical": 1,
-    "high": 2,
-    "medium": 3,
-    "low": 2,
-    "top_risk": "Description of the highest-severity risk",
-    "kill_criteria_count": 3,
-    "kill_criteria_failed": 0,
-    "devils_advocate_summary": "Strongest argument against, in one sentence"
-  },
-  "methodology": {
-    "agents_dispatched": 5,
-    "agents_completed": 5,
-    "total_web_searches": 38,
-    "confidence_threshold": 70,
-    "scoring_formula": "weighted = (demand*0.25 + competitive*0.20 + financial*0.20 + execution*0.20 + risk*0.15) - risk_penalty + solo_bonus",
-    "data_freshness": "Most recent source date",
-    "sources_consulted": 42
-  }
+  "risk_register": [{"id": "RISK-001", "category": "platform", "severity": "high", "description": "Risk description", "mitigation": "Mitigation strategy"}],
+  "methodology": {"depth": "standard", "agents_dispatched": 5, "web_searches_performed": 48, "confidence_threshold": 70}
 }
 ```
+
+### Schema Rules
+- `executive_summary` is a **string**, not an object
+- `opportunities[].composite_score` is the final score (NOT `final_score`)
+- `opportunities[].dimensions` is an **array of objects** with `name`, `key`, `score`, `weight`, `summary`, `key_findings`
+- `risk_register` is an **array of risk objects** (NOT a summary object)
+- `market_research.pain_points` includes full detail per pain point
+- `competitive_analysis.competitors` includes full detail per competitor
 
 ## Cross-Agent Consistency Checks
 
