@@ -1,0 +1,8 @@
+{
+  "name": "business-idea-analyzer",
+  "version": "1.0.0",
+  "description": "Analyze business ideas through multi-dimensional research with parallel agents. Evaluate market demand, competitive landscape, financial viability, execution feasibility, and risk. Generate ranked opportunity reports with go/no-go verdicts exported to MD, PDF, and HTML.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}
