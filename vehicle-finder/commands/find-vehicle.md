@@ -5,18 +5,19 @@ Search real vehicle inventory from major aggregator sites. Takes a `finder_promp
 ## Usage
 
 ```
-/vehicle-finder:find-vehicle 2026 Toyota RAV4 Hybrid XLE, new, within 50 miles, under $38,000, AWD
+/vehicle-finder:find-vehicle 2026 Toyota RAV4 Hybrid XLE, new, under $38,000, AWD
 /vehicle-finder:find-vehicle --from-recommendations                    # Load from last recommender run
 /vehicle-finder:find-vehicle --from-recommendations --top=3            # Search for top 3 recommendations
-/vehicle-finder:find-vehicle 2025 Honda CR-V Hybrid, used, under $32,000 --radius=100
+/vehicle-finder:find-vehicle 2025 Honda CR-V Hybrid, used, under $32,000
 ```
 
 ## Arguments
 
 - `$ARGUMENTS` — Either a freeform finder prompt OR `--from-recommendations` flag
-- `--radius` (optional): Search radius in miles (default: 50)
 - `--from-recommendations`: Load finder_prompts from `/tmp/vehicle_recommendations.json`
 - `--top=N`: When using `--from-recommendations`, search for top N vehicles (default: 1)
+
+Note: Zip code and search radius are always collected via follow-up questions (Phase 1b), not from command-line flags.
 
 Initial request: $ARGUMENTS
 
@@ -30,7 +31,8 @@ Initial request: $ARGUMENTS
 3. Extract the `--top=N` value (default: 1)
 4. For each of the top N recommendations, extract the `finder_prompt` field
 5. If no `finder_prompt` field exists, construct one from `make_model`, `trim`, `year`, and `msrp_range`
-6. Process each finder_prompt through the search pipeline below (sequentially for multiple vehicles)
+6. Show the user which vehicle(s) will be searched, then proceed to Phase 1b (follow-up questions for zip/radius) and Phase 2 (confirmation) before dispatching agents
+7. Process each finder_prompt through the search pipeline below (sequentially for multiple vehicles)
 
 **If freeform text:**
 Parse the text into structured search parameters. Extract these fields using the text content:
@@ -53,15 +55,21 @@ Parse the text into structured search parameters. Extract these fields using the
 - Make/Model: Common vehicle makes (Toyota, Honda, Ford, Chevy, etc.) followed by model name
 - Trim: After model name, common trims (XLE, EX, Limited, Sport, etc.)
 - Condition: "new", "used", "certified", "CPO" — default to "new" if not specified
-- Radius: "within X miles" or `--radius=X` — default to 50
-- Price: "under $X", "below $X,000", "$X" — extract numeric value
+- Price: "under $X", "below $X,000", "$X-$Y" — extract numeric value(s)
 - Features: Known keywords like "AWD", "4WD", "hybrid", "leather", "sunroof"
-- Zip code: 5-digit number, or extract from "near [city]"
+- Additional constraints: mileage limits, title requirements, warranty notes — preserve these as-is in a `notes` field
 
-**If zip_code is missing**, use AskUserQuestion:
+**Do NOT parse radius from the prompt text.** Ignore phrases like "within X miles" in the freeform input. Radius is always collected via the follow-up questions below.
+
+### Phase 1b: Follow-Up Questions (REQUIRED)
+
+After parsing the freeform text, you MUST ask follow-up questions before proceeding. Use a SINGLE `AskUserQuestion` call with 2 questions:
+
+**Question 1: Zip Code**
 ```
 header: "Location"
-question: "What's your zip code for the inventory search?"
+question: "What zip code should we search from?"
+multiSelect: false
 options:
   - label: "20147"
     description: "Ashburn, VA (Northern Virginia)"
@@ -71,9 +79,31 @@ options:
     description: "Baltimore, MD"
 ```
 
-### Phase 2: Search Brief
+**Question 2: Search Radius**
+```
+header: "Radius"
+question: "How far are you willing to travel?"
+multiSelect: false
+options:
+  - label: "25 miles"
+    description: "Local dealers only"
+  - label: "50 miles (Recommended)"
+    description: "Good balance of selection and convenience"
+  - label: "100 miles"
+    description: "Wider net, more options"
+  - label: "200 miles"
+    description: "Maximum range, willing to travel"
+```
 
-Display the search parameters and proceed immediately (no approval gate):
+**CRITICAL**: You MUST stop and WAIT for the user's answers before continuing. Do NOT proceed to Phase 2 until you have received the zip code and radius responses. Do NOT dispatch agents, display the brief, or take any other action while waiting.
+
+After receiving answers, update `zip_code` and `radius_miles` in the search parameters.
+
+If the user provided a zip code in the original prompt text (a 5-digit number), pre-select it as the first option but still ask for confirmation.
+
+### Phase 2: Search Summary & Confirmation
+
+Display a summary of ALL parsed search parameters for the user to review:
 
 ```
 VEHICLE INVENTORY SEARCH
@@ -81,13 +111,29 @@ VEHICLE INVENTORY SEARCH
 Vehicle: [year] [make] [model]
 Trims: [trim_preferences joined]
 Condition: [condition]
-Budget: Under $[max_price]
+Budget: $[min_price]-$[max_price] (or "Under $[max_price]")
 Radius: [radius_miles] miles from [zip_code]
 Features: [features joined]
+Notes: [any additional constraints like mileage limits, title, warranty]
 
-Searching: Cars.com, AutoTrader, CarGurus, Edmunds, TrueCar
-Dispatching 2 research agents + 1 ranker...
+Sources: Cars.com, AutoTrader, CarGurus, Edmunds, TrueCar
+Agents: 2 searchers + 1 ranker
 ```
+
+Then use `AskUserQuestion` to confirm:
+
+```
+header: "Confirm"
+question: "Does this search look correct? I'll dispatch agents to find matching inventory."
+multiSelect: false
+options:
+  - label: "Search now"
+    description: "Looks good — find matching listings"
+  - label: "Edit search"
+    description: "I need to change something first"
+```
+
+**CRITICAL**: You MUST stop and WAIT for confirmation before dispatching agents. If the user selects "Edit search", ask what they want to change and re-display the updated summary for another confirmation. Only proceed to Phase 3 when the user selects "Search now".
 
 ### Phase 3: Agent Dispatch
 
@@ -180,7 +226,9 @@ Export files go to: `/mnt/c/Users/RonKlatt_3qsjg34/Desktop/Claude Code Plugin Ou
 
 - This is a READ-ONLY research tool. Never create apps, write code, or modify repositories.
 - All research uses WebSearch. Do not fabricate listings, prices, VINs, or dealer names.
-- No approval gate — this is a quick search, not a 30-minute research session. Show the brief and proceed.
+- **APPROVAL GATE REQUIRED**: Always show the search summary and wait for user confirmation before dispatching agents. Never skip the confirmation step.
+- **FOLLOW-UP QUESTIONS REQUIRED**: Always ask for zip code and radius via AskUserQuestion, even if hints appear in the prompt text. Wait for answers before proceeding.
+- **NO DOUBLE-EXECUTION**: Each AskUserQuestion call must be followed by a full stop. Do not continue processing until the user has responded. Do not call AskUserQuestion and then also dispatch agents in the same turn.
 - Handle agent failures gracefully — proceed with available results and note gaps.
 - The `deal_rating` must be based on actual FMV comparison, not subjective judgment.
 - Always show both the asking price AND the FMV comparison so the user can assess value.
