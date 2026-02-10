@@ -78,6 +78,7 @@ Return valid JSON (no markdown wrapping):
     "buying_preference": "New preferred",
     "must_haves": ["AWD/4WD", "Tech & safety package"],
     "priorities": ["Reliability & low maintenance", "Resale value & depreciation"],
+    "towing_requirement": "Medium (3,500-7,000 lbs)",
     "additional_notes": ""
   },
   "vehicles_analyzed": 12,
@@ -122,6 +123,7 @@ Return valid JSON (no markdown wrapping):
 - The `finder_prompt` field is critical — it should be a ready-to-paste search string containing: year, make, model, trim preferences, new/used, distance, price cap, and key requirements.
 - Scoring must be honest and conservative. Don't inflate scores to make recommendations look better.
 - If a vehicle misses a must-have requirement, its Requirements Match factor should be capped at 50 regardless of other strengths.
+- If the user specified a towing requirement, treat insufficient towing capacity as a must-have miss. A vehicle rated for "Light" towing when the user needs "Heavy" should be scored accordingly. Include towing capacity prominently in the output.
 - Always include at least 2 pros and 1 con per vehicle — no vehicle is perfect.
 - The `best_trim_recommendation` must include specific reasoning for why that trim is the best value for this user.
 - Include the `themes` section — this helps the user see patterns across individual vehicles.

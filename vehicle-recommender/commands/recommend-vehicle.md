@@ -90,7 +90,27 @@ options:
     description: "Power, handling, acceleration"
 ```
 
-After both rounds, build a **Requirements Profile** JSON:
+**Round 2.5 (Conditional)** — If the user selected "Towing capacity" in Q3 OR selected "Truck" in Q1, present this follow-up question:
+
+**Question 5: Towing Requirements**
+```
+header: "Towing"
+question: "What do you need to tow and approximately how heavy?"
+multiSelect: false
+options:
+  - label: "Light (under 3,500 lbs)"
+    description: "Small utility trailer, jet skis, lightweight camper"
+  - label: "Medium (3,500-7,000 lbs)"
+    description: "Boat, travel trailer, car on open trailer"
+  - label: "Heavy (7,000-10,000 lbs)"
+    description: "Large boat, fifth wheel, heavy equipment trailer"
+  - label: "Max (10,000+ lbs)"
+    description: "Horse trailer, large RV, heavy commercial loads"
+```
+
+If towing was NOT selected and vehicle type is not Truck, skip this question entirely.
+
+After all rounds, build a **Requirements Profile** JSON:
 ```json
 {
   "vehicle_type": "[answer from Q1]",
@@ -98,6 +118,7 @@ After both rounds, build a **Requirements Profile** JSON:
   "buying_preference": "[extracted from Q2, e.g. 'New preferred']",
   "must_haves": ["[selected items from Q3]"],
   "priorities": ["[selected items from Q4]"],
+  "towing_requirement": "[answer from Q5, e.g. 'Medium (3,500-7,000 lbs)' or null if not asked]",
   "additional_notes": "[any freeform text if 'Other' was chosen]"
 }
 ```
