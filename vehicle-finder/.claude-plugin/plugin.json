@@ -1,0 +1,8 @@
+{
+  "name": "vehicle-finder",
+  "version": "1.0.0",
+  "description": "Find real vehicle inventory listings from aggregator sites. Takes a finder_prompt from vehicle-recommender output (or freeform search) and searches Cars.com, AutoTrader, CarGurus, Edmunds, and TrueCar for actual listings with pricing, dealer info, and deal ratings. The downstream partner to vehicle-recommender.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

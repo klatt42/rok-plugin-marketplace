@@ -79,6 +79,11 @@
       "name": "vehicle-recommender",
       "source": "./vehicle-recommender",
       "description": "Interview-driven vehicle recommendation engine. Gathers requirements through structured questions, dispatches 4 parallel research agents to analyze pricing, reliability, cost-of-ownership, and feature matching. Produces ranked recommendations with ready-to-paste finder prompts for future vehicle-finder plugin handoff."
+    },
+    {
+      "name": "vehicle-finder",
+      "source": "./vehicle-finder",
+      "description": "Find real vehicle inventory listings from aggregator sites. Takes a finder_prompt from vehicle-recommender output or freeform search, dispatches 2 research agents to search Cars.com, AutoTrader, CarGurus, Edmunds, and TrueCar for actual listings with deal ratings, FMV validation, and dealer intelligence. Exports to HTML, PDF, and Markdown."
     }
   ]
 }
