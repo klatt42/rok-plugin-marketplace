@@ -74,6 +74,11 @@
       "name": "business-idea-finder",
       "source": "./business-idea-finder",
       "description": "Discover micro-SaaS and AI tool business ideas through pain point mining, gap analysis, and technology arbitrage scanning. Three research modes with scan/explore/deep-scan depth. Profile-filtered for solopreneur builders. Outputs ranked shortlists that feed into business-idea-analyzer."
+    },
+    {
+      "name": "vehicle-recommender",
+      "source": "./vehicle-recommender",
+      "description": "Interview-driven vehicle recommendation engine. Gathers requirements through structured questions, dispatches 4 parallel research agents to analyze pricing, reliability, cost-of-ownership, and feature matching. Produces ranked recommendations with ready-to-paste finder prompts for future vehicle-finder plugin handoff."
     }
   ]
 }

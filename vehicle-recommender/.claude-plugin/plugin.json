@@ -1,0 +1,8 @@
+{
+  "name": "vehicle-recommender",
+  "version": "1.0.0",
+  "description": "Interview-driven vehicle recommendation engine. Gathers requirements through structured questions, dispatches 4 parallel research agents to analyze pricing, reliability, cost-of-ownership, and feature matching, then produces ranked recommendations with ready-to-paste finder prompts for future vehicle-finder plugin handoff.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}
