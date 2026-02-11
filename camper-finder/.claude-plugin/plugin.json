@@ -1,0 +1,8 @@
+{
+  "name": "camper-finder",
+  "version": "1.0.0",
+  "description": "Find real camper and RV inventory listings from aggregator sites. Takes a finder_prompt from camper-recommender output or freeform search, dispatches 2 research agents to search RVTrader, Camping World, General RV, RVUSA, and PPL Motor Homes for actual listings with deal ratings, NADA value validation, and dealer intelligence. Exports to HTML, PDF, and Markdown.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

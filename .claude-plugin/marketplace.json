@@ -84,6 +84,16 @@
       "name": "vehicle-finder",
       "source": "./vehicle-finder",
       "description": "Find real vehicle inventory listings from aggregator sites. Takes a finder_prompt from vehicle-recommender output or freeform search, dispatches 2 research agents to search Cars.com, AutoTrader, CarGurus, Edmunds, and TrueCar for actual listings with deal ratings, FMV validation, and dealer intelligence. Exports to HTML, PDF, and Markdown."
+    },
+    {
+      "name": "camper-recommender",
+      "source": "./camper-recommender",
+      "description": "Interview-driven camper and RV recommendation engine. Gathers requirements through structured questions (type, budget, must-haves, priorities, tow vehicle), dispatches 4 parallel research agents to analyze market pricing, build quality, cost-of-ownership, and floorplan/feature matching. Produces ranked recommendations with ready-to-paste finder prompts for camper-finder plugin handoff."
+    },
+    {
+      "name": "camper-finder",
+      "source": "./camper-finder",
+      "description": "Find real camper and RV inventory listings from aggregator sites. Takes a finder_prompt from camper-recommender output or freeform search, dispatches 2 research agents to search RVTrader, Camping World, General RV, RVUSA, and PPL Motor Homes for actual listings with deal ratings, NADA value validation, and dealer intelligence. Exports to HTML, PDF, and Markdown."
     }
   ]
 }

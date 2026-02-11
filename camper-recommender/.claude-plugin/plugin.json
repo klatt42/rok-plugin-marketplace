@@ -1,0 +1,8 @@
+{
+  "name": "camper-recommender",
+  "version": "1.0.0",
+  "description": "Interview-driven camper and RV recommendation engine. Gathers requirements through structured questions (type, budget, must-haves, priorities, tow vehicle), dispatches 4 parallel research agents to analyze market pricing, build quality, cost-of-ownership, and floorplan/feature matching. Produces ranked recommendations with ready-to-paste finder prompts for camper-finder plugin handoff.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}
