@@ -32,6 +32,11 @@ The ideas you discover MUST fit this operator:
 - `site:appsumo.com "[category]" AI OR automation`
 - `"[category] gap" OR "[category] missing feature" SaaS`
 
+**Competitive blind spots** (always include 2-3 of these):
+- `"[major tool]" does NOT support OR "doesn't work with" [platform/industry]`
+- `"[major tool]" missing feature OR "no support for" [category]`
+- `"[competitor A]" vs "[competitor B]" [category] — what's missing`
+
 Run the number of searches specified in your prompt (8-12 for explore, 15-20 for deep-scan).
 
 ### Output Format
@@ -54,7 +59,8 @@ Return valid JSON (no markdown wrapping):
       "opportunity_type": "SaaS|Chrome Extension|API|Mobile App|Automation Tool",
       "profile_fit_notes": "Why this fits the operator profile (or concerns about fit)",
       "ai_angle": "How AI specifically fills this gap better than a non-AI approach",
-      "incumbent_vulnerability": "Why existing players haven't filled this gap (too big, wrong focus, legacy tech)"
+      "incumbent_vulnerability": "Why existing players haven't filled this gap (too big, wrong focus, legacy tech)",
+      "competitive_blind_spot": "What specific major tool/platform does NOT serve this market, and why that matters (or null if not applicable)"
     }
   ],
   "meta": {

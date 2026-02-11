@@ -123,12 +123,12 @@ Pass ALL 3 primary agent outputs to the cross-pollinator agent along with its in
 
 ### Shortlist
 
-| # | Idea | Tier | Score | Fit | Signal | Type | Window |
-|---|------|------|-------|-----|--------|------|--------|
-| 1 | [Name] | HOT | 85 | 88 | 80 | SaaS | 6-12mo |
-| 2 | [Name] | HOT | 82 | 85 | 77 | Extension | 3-6mo |
-| 3 | [Name] | WARM | 71 | 75 | 65 | SaaS | 12-18mo |
-| ... | ... | ... | ... | ... | ... | ... | ... |
+| # | Idea | Tier | Score | Fit | Signal | Type | Window | TAM | Defensibility |
+|---|------|------|-------|-----|--------|------|--------|-----|---------------|
+| 1 | [Name] | HOT | 85 | 88 | 80 | SaaS | 6-12mo | $30-100M | medium |
+| 2 | [Name] | HOT | 82 | 85 | 77 | Extension | 3-6mo | $10-30M | low |
+| 3 | [Name] | WARM | 71 | 75 | 65 | SaaS | 12-18mo | $100M+ | high |
+| ... | ... | ... | ... | ... | ... | ... | ... | ... | ... |
 
 ### Top 3 Detail
 
@@ -147,6 +147,18 @@ Pass ALL 3 primary agent outputs to the cross-pollinator agent along with its in
 **#3: [Idea Name]** (WARM - 71)
 > [One-liner pitch]
 ...
+
+### Profile-Filtered Out (Still Worth Knowing)
+
+Ideas that scored well on opportunity signal but low on profile fit. These may be worth
+partnering on, outsourcing, or reconsidering if constraints change.
+
+| Idea | Opportunity Score | Profile Fit | Why Filtered | Worth Revisiting? |
+|------|------------------|-------------|--------------|-------------------|
+| [Name] | 82 | 35 | Requires mobile-first / network effects | Yes — if partnering |
+| ... | ... | ... | ... | ... |
+
+_(If no high-opportunity/low-fit ideas were found, this section is omitted.)_
 
 ### Themes
 - **Dominant**: [Pattern across top ideas]

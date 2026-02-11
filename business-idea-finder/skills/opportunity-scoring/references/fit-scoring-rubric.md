@@ -43,3 +43,59 @@
 - "Possible for 6-12 months but no one's built it": 50-70
 - "Possible for >1 year, competitors emerging": 20-40
 - "Has existed for years, market saturated": 0-15
+
+## Pain Severity Scoring
+
+### High Severity (80-100)
+- "Buyer ghosting on Facebook Marketplace" — affects 100M+ marketplace users, happens daily, causes lost revenue and wasted time, no reliable workaround. Score: 95.
+- "No-show appointments for home services" — affects millions of contractors daily, direct revenue loss, only workaround is double-booking. Score: 90.
+
+### Medium Severity (40-79)
+- "Scheduling conflicts across multiple booking platforms" — affects thousands of multi-platform sellers weekly, workaround exists (manual calendar sync) but is tedious. Score: 60.
+- "Inconsistent pricing across marketplace listings" — affects sellers on 2+ platforms, workaround is spreadsheets. Score: 55.
+
+### Low Severity (0-39)
+- "Aesthetic inconsistency in listing photos" — minor annoyance, affects presentation not revenue. Score: 20.
+- "Lack of emoji support in business messaging tools" — cosmetic preference, doesn't block any workflow. Score: 10.
+
+## TAM Estimation Examples
+
+### Large TAM ($100M+)
+- "Facebook Marketplace seller tools" — 1B+ marketplace users globally, even 1% power sellers (10M) at $10/mo = $1.2B TAM. Estimate: $100M+ (conservative, US-focused segment).
+
+### Medium TAM ($10-100M)
+- "AI estimating tool for restoration contractors" — ~50,000 restoration companies in US, $50/mo willingness-to-pay = $30M TAM.
+
+### Small TAM ($1-10M)
+- "Chrome extension for HVAC permit lookup" — ~100,000 HVAC companies in US, $10/mo, 10% addressable = $1.2M TAM.
+
+### Insufficient Data
+- "AI tool for niche regulatory compliance" — Cannot estimate without knowing target sub-industry size. Use "unknown" and explain the gap.
+
+## Defensibility Assessment Examples
+
+### High Defensibility
+- "Community-sourced contractor reputation platform" — Network effects: value increases with each user, data moat from aggregated reviews, high switching costs once reputation is established.
+- "AI model trained on proprietary industry data" — Data moat: model improves with usage, competitors can't replicate training data.
+
+### Medium Defensibility
+- "AI-powered CRM with industry-specific templates" — Domain expertise moat: deep understanding of restoration/home services workflows. Competitors could build but would take 6-12 months to match depth.
+- "Tool with crowdsourced pricing data" — Partial data moat: community contributions create value but could be replicated with enough investment.
+
+### Low Defensibility
+- "Chrome extension wrapping a public API" — No proprietary data, minimal switching costs. Platform (Chrome) could add the feature natively.
+- "Simple automation connecting two SaaS tools" — Zapier/Make could add this as a template. Speed-to-market is the only advantage.
+
+## Network Potential Classification Examples
+
+### Single-User
+- "AI listing description generator" — Each user gets value independently, no network needed.
+- "Automated repricing tool" — Works for one seller in isolation.
+
+### Network-Optional
+- "Contractor scheduling tool with customer portal" — Core value is single-user (scheduling), but customer-facing portal adds network-like value.
+- "Marketplace analytics dashboard with benchmarking" — Works alone, but community data makes benchmarks better.
+
+### Network-Required
+- "Buyer/seller reputation verification across platforms" — Meaningless without a critical mass of users contributing reputation data.
+- "Marketplace for connecting sub-contractors" — Two-sided marketplace, inherently requires network.

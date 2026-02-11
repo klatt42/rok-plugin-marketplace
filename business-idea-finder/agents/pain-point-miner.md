@@ -34,6 +34,10 @@ For EACH query, structure as:
 - `"switched from" OR "looking for alternative" [tool category] small business`
 - `"[industry] pain points" 2025 OR 2026`
 
+**Community/trust/reputation pain** (always include 1-2 of these):
+- `"no way to verify" OR "can't trust" OR "reputation" [platform/industry] site:reddit.com`
+- `"portable reputation" OR "reviews locked" OR "trust across platforms"`
+
 Run the number of searches specified in your prompt (8-12 for explore, 15-20 for deep-scan).
 
 ### Output Format
@@ -55,7 +59,8 @@ Return valid JSON (no markdown wrapping):
       "current_workarounds": "What they do today (spreadsheets, manual process, expensive enterprise tool)",
       "opportunity_type": "SaaS|Chrome Extension|API|Mobile App|Automation Tool",
       "profile_fit_notes": "Why this fits the operator profile (or concerns about fit)",
-      "ai_angle": "How AI specifically improves this over existing non-AI solutions"
+      "ai_angle": "How AI specifically improves this over existing non-AI solutions",
+      "network_potential": "single-user|network-optional|network-required — Could this pain be solved with a single-user tool, or does it require a network/community?"
     }
   ],
   "meta": {

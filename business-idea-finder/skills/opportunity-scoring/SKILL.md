@@ -1,7 +1,7 @@
 name: opportunity-scoring
 description: |
-  Composite scoring rubric for business idea discovery. Profile fit (60%)
-  plus opportunity signal (40%) with tier assignments and intersection
+  Composite scoring rubric for business idea discovery. Profile fit (45%)
+  plus opportunity signal (55%) with tier assignments and intersection
   multipliers. Used by the shortlist-ranker agent and scan mode scoring.
 
 ## Opportunity Scoring Methodology
@@ -9,7 +9,7 @@ description: |
 ### Composite Formula
 
 ```
-composite = (profile_fit * 0.60) + (opportunity_signal * 0.40)
+composite = (profile_fit * 0.45) + (opportunity_signal * 0.55)
 ```
 
 For cross-pollinator intersections:
@@ -33,11 +33,12 @@ adjusted = min(100, composite * intersection_multiplier)
 
 | Factor | Weight | 100 | 50 | 0 |
 |--------|--------|-----|----|----|
-| Pain evidence | 30% | 10+ complaints with URLs, active threads | 2-3 signals, some dated | No evidence found |
-| Competition gap | 25% | White space, no direct competitor | 1-2 weak competitors | Saturated, 5+ strong players |
-| Arbitrage window | 20% | Just became possible this quarter | Possible <1 year | Been possible for years |
-| Monetization clarity | 15% | Obvious SaaS subscription model | Could charge, model unclear | No clear monetization |
-| Market size signal | 10% | Clear >$10M TAM signals | Niche but viable ($1-10M) | Tiny niche (<$1M) |
+| Pain severity & reach | 25% | Affects millions, daily pain, no workaround | Affects thousands, weekly pain, poor workarounds | Minor annoyance, few affected |
+| Pain evidence quality | 20% | 10+ complaints with URLs, active threads | 2-3 signals, some dated | No evidence found |
+| Competition gap | 20% | White space, no direct competitor | 1-2 weak competitors | Saturated, 5+ strong players |
+| Arbitrage window | 15% | Just became possible this quarter | Possible <1 year | Been possible for years |
+| Monetization clarity | 10% | Obvious SaaS subscription model | Could charge, model unclear | No clear monetization |
+| Market size / TAM estimate | 10% | Clear >$100M TAM, estimate grounded in evidence | $10-100M TAM, rough estimate | Tiny niche (<$1M) or insufficient data |
 
 ### Tier Assignments
 
