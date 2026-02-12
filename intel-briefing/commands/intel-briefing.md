@@ -9,12 +9,13 @@ Generate or view the cumulative intelligence master briefing, synthesizing all i
 /intel-briefing:intel-briefing refresh            # Force regeneration from all data
 /intel-briefing:intel-briefing category:financial  # Focus on financial section only
 /intel-briefing:intel-briefing category:geopolitical # Focus on geopolitical section only
+/intel-briefing:intel-briefing category:labor        # Focus on labor section only
 /intel-briefing:intel-briefing since:2026-01-01    # Only include data since date
 ```
 
 ### Parameters
 - **refresh** - Force regeneration even if a recent briefing exists
-- **category** - Focus on a single section: `financial`, `geopolitical`
+- **category** - Focus on a single section: `financial`, `geopolitical`, `labor`
 - **since** - Only consider data after this date (ISO format YYYY-MM-DD)
 
 Initial request: $ARGUMENTS
@@ -94,21 +95,21 @@ Status: [Current / Stale / None]
      -H "Authorization: Bearer ${ROK_SUPABASE_KEY}"
    ```
 
-5. Get previous briefing sections (financial_section, geopolitical_section) for delta detection context
+5. Get previous briefing sections (financial_section, geopolitical_section, labor_section) for delta detection context
 
 Display:
 ```
 INTELLIGENCE GATHERED
 New Claims Since Last: [N]
 Total Claims: [N]
-  Financial: [n] | Geopolitical: [n] | Technology: [n] | Other: [n]
+  Financial: [n] | Geopolitical: [n] | Technology: [n] | Labor: [n] | Other: [n]
 Predictions Pending: [N] | Due for Review: [N]
 Active Alerts: [N]
 ```
 
 ### Phase 3: Specialized Analysis (Parallel Dispatch)
 
-If `category:financial` is specified, skip geopolitical. If `category:geopolitical` is specified, skip financial. Otherwise dispatch both.
+If `category:financial` is specified, skip geopolitical and labor. If `category:geopolitical` is specified, skip financial and labor. If `category:labor` is specified, skip financial and geopolitical. Otherwise dispatch all three.
 
 1. Group claims by category for targeted dispatch
 
@@ -150,10 +151,30 @@ If `category:financial` is specified, skip geopolitical. If `category:geopolitic
    )
    ```
 
-4. Collect results from both agents via TaskOutput (block: true):
+4. **Dispatch labor-analyst** agent (background):
+   ```
+   Task(
+     description: "Labor synthesis for master briefing",
+     prompt: "You are the labor-analyst agent. [Include agent instructions from agents/labor-analyst.md]
+
+     LABOR CLAIMS:
+     [JSON array of all labor/workforce/employment category claims]
+
+     PREVIOUS LABOR SECTION:
+     [Previous briefing's labor section text, or 'This is the inaugural briefing']
+
+     CURRENT DATE: [today's date]
+
+     Return structured JSON per your output format.",
+     run_in_background: true
+   )
+   ```
+
+5. Collect results from all agents via TaskOutput (block: true):
    ```
    TaskOutput(task_id: "<financial_task_id>", block: true, timeout: 120000)
    TaskOutput(task_id: "<geopolitical_task_id>", block: true, timeout: 120000)
+   TaskOutput(task_id: "<labor_task_id>", block: true, timeout: 120000)
    ```
 
 Display:
@@ -161,6 +182,7 @@ Display:
 SPECIALIZED ANALYSIS COMPLETE
 Financial Section: [Ready / Skipped / Error]
 Geopolitical Section: [Ready / Skipped / Error]
+Labor Section: [Ready / Skipped / Error]
 ```
 
 ### Phase 4: Master Synthesis
@@ -176,6 +198,9 @@ Geopolitical Section: [Ready / Skipped / Error]
 
      GEOPOLITICAL SECTION OUTPUT:
      [JSON from geopolitical-analyst]
+
+     LABOR SECTION OUTPUT:
+     [JSON from labor-analyst]
 
      ALL VALIDATED CLAIMS:
      [JSON array of all claims with validation status]
@@ -219,6 +244,7 @@ Geopolitical Section: [Ready / Skipped / Error]
        "key_developments": "[key_developments text]",
        "financial_section": "[financial_section_md]",
        "geopolitical_section": "[geopolitical_section_md]",
+       "labor_section": "[labor_section_md]",
        "technology_section": null,
        "consensus_themes": [consensus_json],
        "contested_topics": [contested_json],
@@ -239,7 +265,7 @@ Geopolitical Section: [Ready / Skipped / Error]
 ## Important Rules
 
 - For `refresh`, always regenerate even if a recent briefing exists
-- For `category:` filter, only generate that section (skip the other analyst agent). The synthesizer still runs but with only one section populated.
+- For `category:` filter, only generate that section (skip the other analyst agents). The synthesizer still runs but with only one section populated.
 - Incremental synthesis: for non-refresh runs, only process claims newer than the last briefing but include previous sections for context
 - If fewer than 3 total documents in the system, display a note: "Limited data -- briefing quality will improve with more sources. Currently based on [N] documents."
 - If no claims exist at all, do not generate a briefing. Instead display: "No intelligence data found. Ingest documents first: /intel-briefing:intel-ingest"

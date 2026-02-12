@@ -7,6 +7,7 @@ Create and manage topic alerts that trigger when new claims match specified topi
 ```
 /intel-briefing:intel-alert                       # List active alerts
 /intel-briefing:intel-alert add:"Bitcoin ETF" category:financial
+/intel-briefing:intel-alert add:"AI job displacement" category:labor
 /intel-briefing:intel-alert remove:id             # Deactivate alert
 /intel-briefing:intel-alert clear                 # Remove all alerts
 ```
@@ -53,7 +54,7 @@ Create one with:
 
 1. Parse topic text and optional category from arguments
 2. Extract keywords from topic text (split on spaces, lowercase, remove common stop words: "the", "a", "an", "is", "of", "in", "to", "and", "or", "for")
-3. Validate category if provided (must be one of: financial, geopolitical, technology, economic, market, policy, military, social, energy, other)
+3. Validate category if provided (must be one of: financial, geopolitical, technology, economic, market, policy, military, social, energy, labor, other)
 4. Store in `rok_intel_alerts`:
 
 ```bash

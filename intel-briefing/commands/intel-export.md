@@ -93,6 +93,11 @@ Parse `format:` parameter:
        "risk_matrix": [array],
        "predictions": [array]
      },
+     "labor_section": {
+       "section_summary": "...",
+       "workforce_trends": [array],
+       "predictions": [array]
+     },
      "cross_domain_themes": [array],
      "consensus_themes": {object},
      "contested_topics": {object},

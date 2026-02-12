@@ -123,6 +123,7 @@ SOURCE COMPARISON REPORT
 | Geopolitical Claims | [count] | [count] |
 | Technology Claims | [count] | [count] |
 | Economic Claims | [count] | [count] |
+| Labor Claims | [count] | [count] |
 | Other Claims | [count] | [count] |
 | Predictions Made | [count] | [count] |
 | Predictions Evaluated | [count] | [count] |
@@ -206,7 +207,7 @@ FILTERED COMPARISON: financial
 - Agreement detection: same subcategory + same directional conclusion
 - Disagreement detection: same subcategory + opposite directional conclusions
 - Source name matching is case-insensitive; try partial match if exact match fails
-- Category filter must be one of: financial, geopolitical, technology, economic, market, policy, military, social, energy, other
+- Category filter must be one of: financial, geopolitical, technology, economic, market, policy, military, social, energy, labor, other
 - Format all percentages to 2 decimal places
 - Brier scores are displayed to 4 decimal places (lower is better; range 0.0000 to 1.0000)
 - When a source has zero documents, display 0 for all counts rather than skipping the source

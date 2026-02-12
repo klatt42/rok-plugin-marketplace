@@ -12,11 +12,12 @@ Add, review, score, and track predictions with accuracy measurement. Predictions
 /intel-briefing:intel-predict accuracy                              # Show accuracy statistics
 /intel-briefing:intel-predict list                                  # List all predictions with filters
 /intel-briefing:intel-predict list category:geopolitical outcome:pending
+/intel-briefing:intel-predict add:"prediction text" category:labor timeframe:1y confidence:0.6
 ```
 
 ### Parameters
 - **add** - Prediction text to add manually
-- **category** - `financial`, `geopolitical`, `technology`, `economic`, `other`
+- **category** - `financial`, `geopolitical`, `technology`, `economic`, `labor`, `other`
 - **timeframe** - `30d`, `90d`, `6mo`, `1y`, `5y`, `indefinite`
 - **confidence** - 0.0 to 1.0 (initial confidence score)
 - **review** - Show predictions due for scoring (target_date <= today)
@@ -33,7 +34,7 @@ Initial request: $ARGUMENTS
 
 1. Parse arguments:
    - `add:` (required) - The prediction text
-   - `category:` (required, prompt if missing) - One of: financial, geopolitical, technology, economic, other
+   - `category:` (required, prompt if missing) - One of: financial, geopolitical, technology, economic, labor, other
    - `timeframe:` (required, prompt if missing) - One of: 30d, 90d, 6mo, 1y, 5y, indefinite
    - `confidence:` (optional, default 0.5) - 0.0 to 1.0
    - `subcategory:` (optional) - More specific tag
@@ -211,6 +212,7 @@ Initial request: $ARGUMENTS
    |---------------|-----------|---------|---------|-----------|----------|--------|
    | Financial     | [n]       | [n]     | [n]     | [n]       | [X]%     | [X.XX] |
    | Geopolitical  | [n]       | [n]     | [n]     | [n]       | [X]%     | [X.XX] |
+   | Labor         | [n]       | [n]     | [n]     | [n]       | [X]%     | [X.XX] |
    | ...           |           |         |         |           |          |        |
 
    By Source

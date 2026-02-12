@@ -134,7 +134,7 @@ DOCUMENT ANALYSIS COMPLETE
 Classification: [classification]
 Topics: [topic1, topic2, ...]
 Key Points: [N] extracted
-Claims: [N] extracted (Financial: [n] | Geopolitical: [n] | Technology: [n] | Other: [n])
+Claims: [N] extracted (Financial: [n] | Geopolitical: [n] | Technology: [n] | Labor: [n] | Other: [n])
 Predictions: [N] extracted
 Notable Quotes: [N] extracted
 ```
@@ -302,7 +302,7 @@ Source: [source_type] | Author: [author] | Trust: [tier]
 Classification: [classification]
 
 Claims Extracted: [N]
-  Financial: [n] | Geopolitical: [n] | Technology: [n] | Other: [n]
+  Financial: [n] | Geopolitical: [n] | Technology: [n] | Labor: [n] | Other: [n]
   Validated: [n confirmed] | [n partial] | [n unconfirmed] | [n contradicted]
 
 Predictions Extracted: [N]
@@ -328,7 +328,7 @@ BATCH INGESTION COMPLETE
 =========================================
 Files Processed: [N] of [total]
 Documents Stored: [N]
-Total Claims: [N] (Financial: [n] | Geopolitical: [n] | Technology: [n] | Other: [n])
+Total Claims: [N] (Financial: [n] | Geopolitical: [n] | Technology: [n] | Labor: [n] | Other: [n])
 Total Predictions: [N]
 Alert Matches: [N]
 Master Briefing: [Updated to v[N] / Skipped]

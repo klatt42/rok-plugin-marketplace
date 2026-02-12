@@ -251,7 +251,7 @@ Initial request: $ARGUMENTS
      Financial: [n] | Geopolitical: [n] | Technology: [n]
      Economic:  [n] | Market:       [n] | Policy:     [n]
      Military:  [n] | Social:       [n] | Energy:     [n]
-     Other:     [n]
+     Labor:     [n] | Other:        [n]
    By Validation:
      Confirmed: [n] | Partial: [n] | Unconfirmed: [n]
      Contradicted: [n] | Unvalidated: [n]

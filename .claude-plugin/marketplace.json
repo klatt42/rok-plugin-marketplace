@@ -98,7 +98,7 @@
     {
       "name": "intel-briefing",
       "source": "./intel-briefing",
-      "description": "Intelligence briefing system for continuous document analysis and forecasting. Ingest YouTube videos, URLs, articles, PDFs, and text files. Extract structured claims, validate via external research, generate cumulative master briefings with financial and geopolitical sections, track prediction accuracy with Brier scores, and export to HTML, PDF, and Markdown."
+      "description": "Intelligence briefing system for continuous document analysis and forecasting. Ingest YouTube videos, URLs, articles, PDFs, and text files. Extract structured claims, validate via external research, generate cumulative master briefings with financial, geopolitical, and labor market sections including AI impact analysis, track prediction accuracy with Brier scores, and export to HTML, PDF, and Markdown."
     }
   ]
 }

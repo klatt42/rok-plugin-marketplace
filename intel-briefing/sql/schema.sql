@@ -37,7 +37,7 @@ CREATE TABLE rok_intel_claims (
     claim_text TEXT NOT NULL,
     category TEXT NOT NULL CHECK (category IN (
         'financial', 'geopolitical', 'technology', 'economic',
-        'market', 'policy', 'military', 'social', 'energy', 'other'
+        'market', 'policy', 'military', 'social', 'energy', 'labor', 'other'
     )),
     subcategory TEXT,
     claim_type TEXT NOT NULL CHECK (claim_type IN (
@@ -68,7 +68,7 @@ CREATE TABLE rok_intel_predictions (
     claim_id UUID REFERENCES rok_intel_claims(id),
     document_id UUID REFERENCES rok_intel_documents(id),
     prediction_text TEXT NOT NULL,
-    category TEXT NOT NULL CHECK (category IN ('financial', 'geopolitical', 'technology', 'economic', 'other')),
+    category TEXT NOT NULL CHECK (category IN ('financial', 'geopolitical', 'technology', 'economic', 'labor', 'other')),
     subcategory TEXT,
     timeframe TEXT,
     target_date DATE,
@@ -102,6 +102,7 @@ CREATE TABLE rok_intel_briefings (
     financial_section TEXT,
     geopolitical_section TEXT,
     technology_section TEXT,
+    labor_section TEXT,
     consensus_themes JSONB,
     contested_topics JSONB,
     confidence_summary JSONB,
@@ -168,7 +169,7 @@ CREATE INDEX idx_intel_alerts_topic ON rok_intel_alerts(topic);
 CREATE TABLE rok_intel_theses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     thesis_text TEXT NOT NULL,
-    category TEXT CHECK (category IN ('financial', 'geopolitical', 'technology', 'economic', 'other')),
+    category TEXT CHECK (category IN ('financial', 'geopolitical', 'technology', 'economic', 'labor', 'other')),
     initial_confidence DECIMAL(3,2) CHECK (initial_confidence BETWEEN 0 AND 1),
     current_confidence DECIMAL(3,2) CHECK (current_confidence BETWEEN 0 AND 1),
     confidence_history JSONB DEFAULT '[]'::jsonb,

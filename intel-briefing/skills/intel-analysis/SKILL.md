@@ -45,6 +45,7 @@ Load when performing document analysis, reviewing claim quality, or calibrating 
 | `policy` | trade-policy, tariffs, regulation, fiscal-policy | "Weaker dollar policy deliberate to rebuild industry" |
 | `military` | military-industrial, power-projection, choke-points | "Strait of Hormuz control is strategic priority" |
 | `social` | wealth-inequality, economic-mobility, labor-market | "Top 10% account for half of consumer spending" |
+| `labor` | ai-displacement, automation-impact, workforce-participation, wage-dynamics, skills-gap, remote-work, gig-economy, labor-shortage, union-activity, employment-trends | "AI will displace 40% of knowledge workers within 5 years" |
 | `energy` | oil-reserves, energy-independence, critical-minerals | "US is 100% import reliant for 12 critical minerals" |
 
 ## Confidence Scoring Rubric

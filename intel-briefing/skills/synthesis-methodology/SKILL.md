@@ -127,9 +127,17 @@ Each version stores:
 - Risk matrix (probability x impact)
 - Predictions table
 
+**Labor Section**:
+- Open with the most significant workforce shift since last briefing
+- Sector-by-sector AI exposure views with scored confidence
+- AI displacement indicators with timelines
+- Predictions table
+- Highlight where labor trends drive or are driven by financial/geopolitical dynamics
+
 **Cross-Domain Themes**:
-- Where financial and geopolitical intersect (they ALWAYS do)
+- Where financial, geopolitical, and labor dynamics intersect (they ALWAYS do)
 - Example: "Dollar weakness" is both financial (market impact) AND geopolitical (power shift)
+- Example: "AI automation" is financial (productivity/tech stocks) AND geopolitical (tech supremacy) AND labor (job displacement)
 
 **Prediction Tracking**:
 - Only show predictions due for review (target_date within 30 days)
@@ -151,7 +159,7 @@ Consider: What would cause this consensus to be wrong?
 | Element | Minimum Required |
 |---------|-----------------|
 | Claims per document | At least 3 |
-| Predictions per briefing | At least 1 financial + 1 geopolitical |
+| Predictions per briefing | At least 1 financial + 1 geopolitical + 1 labor |
 | Consensus themes | Only include if 2+ sources |
 | Contested topics | Only include if genuinely opposing views |
 | Watch items | 3-5 per briefing |

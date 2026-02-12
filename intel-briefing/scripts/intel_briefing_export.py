@@ -35,11 +35,13 @@ DEFAULT_OUTPUT_DIR = "/mnt/c/Users/RonKlatt_3qsjg34/Desktop/Claude Code Plugin O
 
 NAVY = "#1E3A5F"
 NAVY_RGB = (30, 58, 95)
-GOLD = "#D4AF37"
-GOLD_RGB = (212, 175, 55)
+TEAL = "#0D9488"
+TEAL_RGB = (13, 148, 136)
+EMERALD = "#059669"
+EMERALD_RGB = (5, 150, 105)
 NAVY_LIGHT = "#2C5282"
-LIGHT_BG = "#F7F9FC"
-BORDER_COLOR = "#CBD5E1"
+LIGHT_BG = "#F0FDFA"
+BORDER_COLOR = "#99F6E4"
 TEXT_DARK = "#1A202C"
 TEXT_MUTED = "#64748B"
 
@@ -161,6 +163,7 @@ def generate_briefing_html(data: dict, output_path: str):
     key_devs = data.get("key_developments", [])
     financial = data.get("financial_section", {})
     geopolitical = data.get("geopolitical_section", {})
+    labor = data.get("labor_section", {})
     cross_domain = data.get("cross_domain_themes", [])
     consensus = data.get("consensus_themes", {})
     contested = data.get("contested_topics", {})
@@ -231,6 +234,45 @@ def generate_briefing_html(data: dict, output_path: str):
           <td style="font-size:12px;color:{TEXT_MUTED}">{escape_html(p.get('rationale', ''))}</td>
         </tr>"""
 
+    # Labor sector impacts
+    labor_sector_rows = ""
+    for si in labor.get("sector_impacts", []):
+        ai_exp = si.get("ai_exposure", "medium")
+        ai_c = RISK_COLORS.get(ai_exp, RISK_COLORS["medium"])
+        labor_sector_rows += f"""
+        <tr>
+          <td style="font-weight:600">{escape_html(si.get('sector', ''))}</td>
+          <td style="text-align:center"><span style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;color:{OUTLOOK_COLORS.get(si.get('impact_outlook', 'neutral'), OUTLOOK_COLORS['neutral'])['text']};background:{OUTLOOK_COLORS.get(si.get('impact_outlook', 'neutral'), OUTLOOK_COLORS['neutral'])['bg']}">{escape_html(si.get('impact_outlook', '').upper())}</span></td>
+          <td style="text-align:center"><span style="display:inline-block;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;color:{ai_c['text']};background:{ai_c['bg']}">{escape_html(ai_exp.upper())}</span></td>
+          <td style="text-align:center">{confidence_badge_html(si.get('confidence', 0))}</td>
+          <td style="font-size:12px;color:{TEXT_MUTED}">{escape_html(si.get('rationale', ''))}</td>
+        </tr>"""
+
+    # Labor predictions
+    labor_pred_rows = ""
+    for i, p in enumerate(labor.get("predictions", []), 1):
+        labor_pred_rows += f"""
+        <tr>
+          <td style="text-align:center;font-weight:600">{i}</td>
+          <td>{escape_html(p.get('prediction', ''))}</td>
+          <td style="text-align:center">{escape_html(p.get('timeframe', ''))}</td>
+          <td style="text-align:center">{confidence_badge_html(p.get('confidence', 0))}</td>
+          <td style="font-size:12px;color:{TEXT_MUTED}">{escape_html(p.get('rationale', ''))}</td>
+        </tr>"""
+
+    # AI displacement indicators
+    ai_displacement_rows = ""
+    for ind in labor.get("ai_displacement_indicators", []):
+        sev = ind.get("severity", "medium")
+        sc = RISK_COLORS.get(sev, RISK_COLORS["medium"])
+        ai_displacement_rows += f"""
+        <div style="padding:10px 14px;border-left:4px solid {sc['border']};margin-bottom:8px;background:{sc['bg']}">
+          <strong style="color:{sc['text']}">{escape_html(ind.get('indicator', ''))}</strong>
+          <div style="font-size:12px;color:{TEXT_MUTED};margin-top:4px">
+            Sectors: {escape_html(', '.join(ind.get('affected_sectors', [])))} | Timeline: {escape_html(ind.get('timeline', 'N/A'))} | Severity: {sev.upper()}
+          </div>
+        </div>"""
+
     # Cross-domain themes
     cross_rows = ""
     for ct in cross_domain:
@@ -239,12 +281,16 @@ def generate_briefing_html(data: dict, output_path: str):
           <div style="font-weight:700;color:{NAVY};margin-bottom:6px">{escape_html(ct.get('theme', ''))}</div>
           <div style="display:flex;gap:16px;flex-wrap:wrap">
             <div style="flex:1;min-width:200px">
-              <div style="font-size:11px;color:{GOLD};font-weight:600;text-transform:uppercase">Financial Angle</div>
+              <div style="font-size:11px;color:{TEAL};font-weight:600;text-transform:uppercase">Financial Angle</div>
               <div style="font-size:13px;color:{TEXT_DARK}">{escape_html(ct.get('financial_angle', ''))}</div>
             </div>
             <div style="flex:1;min-width:200px">
-              <div style="font-size:11px;color:{GOLD};font-weight:600;text-transform:uppercase">Geopolitical Angle</div>
+              <div style="font-size:11px;color:{TEAL};font-weight:600;text-transform:uppercase">Geopolitical Angle</div>
               <div style="font-size:13px;color:{TEXT_DARK}">{escape_html(ct.get('geopolitical_angle', ''))}</div>
+            </div>
+            <div style="flex:1;min-width:200px">
+              <div style="font-size:11px;color:{EMERALD};font-weight:600;text-transform:uppercase">Labor Angle</div>
+              <div style="font-size:13px;color:{TEXT_DARK}">{escape_html(ct.get('labor_angle', ''))}</div>
             </div>
           </div>
           <div style="text-align:right;margin-top:6px">{confidence_badge_html(ct.get('confidence', 0))}</div>
@@ -327,7 +373,11 @@ def generate_briefing_html(data: dict, output_path: str):
             <div style="font-size:10px;color:{NAVY};font-weight:600;text-transform:uppercase">Geopolitical</div>
             <div style="font-size:20px;font-weight:700;color:{NAVY}">{escape_html(accuracy.get('geopolitical', 'N/A'))}</div>
           </div>
-          <div style="flex:1;min-width:120px;background:{GOLD};padding:12px;border-radius:8px;text-align:center">
+          <div style="flex:1;min-width:120px;background:#ECFDF5;padding:12px;border-radius:8px;text-align:center">
+            <div style="font-size:10px;color:{NAVY};font-weight:600;text-transform:uppercase">Labor</div>
+            <div style="font-size:20px;font-weight:700;color:{NAVY}">{escape_html(accuracy.get('labor', 'N/A'))}</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:{EMERALD};padding:12px;border-radius:8px;text-align:center">
             <div style="font-size:10px;color:{NAVY};font-weight:600;text-transform:uppercase">Overall</div>
             <div style="font-size:20px;font-weight:700;color:{NAVY}">{escape_html(accuracy.get('overall', 'N/A'))}</div>
           </div>
@@ -347,14 +397,14 @@ def generate_briefing_html(data: dict, output_path: str):
   .header h1 {{ font-size:28px; margin-bottom:8px; }}
   .header .meta {{ font-size:13px; opacity:0.85; }}
   .header .meta span {{ margin-right:16px; }}
-  h2 {{ color:{NAVY}; font-size:20px; margin:28px 0 12px 0; padding-bottom:6px; border-bottom:2px solid {GOLD}; }}
+  h2 {{ color:{NAVY}; font-size:20px; margin:28px 0 12px 0; padding-bottom:6px; border-bottom:2px solid {TEAL}; }}
   h3 {{ color:{NAVY_LIGHT}; font-size:16px; margin:20px 0 8px 0; }}
   table {{ width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; }}
   th {{ background:{NAVY}; color:white; padding:10px 12px; text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }}
   td {{ padding:8px 12px; border-bottom:1px solid {BORDER_COLOR}; }}
   tr:hover {{ background:{LIGHT_BG}; }}
   .section {{ margin-bottom:24px; }}
-  .divider {{ border:none; border-top:2px solid {GOLD}; margin:32px 0; }}
+  .divider {{ border:none; border-top:2px solid {TEAL}; margin:32px 0; }}
   .footer {{ text-align:center; font-size:12px; color:{TEXT_MUTED}; margin-top:40px; padding-top:16px; border-top:1px solid {BORDER_COLOR}; }}
   p {{ margin-bottom:12px; }}
 </style>
@@ -401,6 +451,15 @@ def generate_briefing_html(data: dict, output_path: str):
 
     {"<h3>Geopolitical Predictions</h3><table><tr><th>#</th><th>Prediction</th><th>Timeframe</th><th>Confidence</th><th>Rationale</th></tr>" + geo_pred_rows + "</table>" if geo_pred_rows else ""}
   </div>
+
+  {"<hr class='divider'><div class='section'><h2>Labor Markets &amp; AI Impact</h2>" +
+    "<h3>Employment Outlook</h3>" +
+    "<p><strong>Short-term (0-12mo):</strong> " + escape_html(labor.get('labor_outlook', {}).get('short_term', 'N/A')) + "</p>" +
+    "<p><strong>Medium-term (1-5yr):</strong> " + escape_html(labor.get('labor_outlook', {}).get('medium_term', 'N/A')) + "</p>" +
+    ("<h3>Sector Impact Views</h3><table><tr><th>Sector</th><th>Impact</th><th>AI Exposure</th><th>Confidence</th><th>Key Factor</th></tr>" + labor_sector_rows + "</table>" if labor_sector_rows else "") +
+    ("<h3>AI Displacement Indicators</h3>" + ai_displacement_rows if ai_displacement_rows else "") +
+    ("<h3>Labor Predictions</h3><table><tr><th>#</th><th>Prediction</th><th>Timeframe</th><th>Confidence</th><th>Rationale</th></tr>" + labor_pred_rows + "</table>" if labor_pred_rows else "") +
+    "</div>" if labor else ""}
 
   {"<hr class='divider'><div class='section'><h2>Cross-Domain Themes</h2>" + cross_rows + "</div>" if cross_rows else ""}
 
@@ -466,7 +525,7 @@ def generate_predictions_html(data: dict, output_path: str):
   .container {{ max-width:900px; margin:0 auto; padding:32px 24px; }}
   .header {{ background: linear-gradient(135deg, {NAVY} 0%, {NAVY_LIGHT} 100%); color:white; padding:32px; border-radius:12px; margin-bottom:32px; }}
   .header h1 {{ font-size:28px; margin-bottom:8px; }}
-  h2 {{ color:{NAVY}; font-size:20px; margin:28px 0 12px 0; padding-bottom:6px; border-bottom:2px solid {GOLD}; }}
+  h2 {{ color:{NAVY}; font-size:20px; margin:28px 0 12px 0; padding-bottom:6px; border-bottom:2px solid {TEAL}; }}
   table {{ width:100%; border-collapse:collapse; margin:12px 0; font-size:13px; }}
   th {{ background:{NAVY}; color:white; padding:10px 12px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }}
   td {{ padding:8px 12px; border-bottom:1px solid {BORDER_COLOR}; }}
@@ -537,7 +596,7 @@ def generate_accuracy_html(data: dict, output_path: str):
   .container {{ max-width:900px; margin:0 auto; padding:32px 24px; }}
   .header {{ background: linear-gradient(135deg, {NAVY} 0%, {NAVY_LIGHT} 100%); color:white; padding:32px; border-radius:12px; margin-bottom:32px; }}
   .header h1 {{ font-size:28px; margin-bottom:8px; }}
-  h2 {{ color:{NAVY}; font-size:20px; margin:28px 0 12px 0; padding-bottom:6px; border-bottom:2px solid {GOLD}; }}
+  h2 {{ color:{NAVY}; font-size:20px; margin:28px 0 12px 0; padding-bottom:6px; border-bottom:2px solid {TEAL}; }}
   table {{ width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; }}
   th {{ background:{NAVY}; color:white; padding:10px 12px; text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }}
   td {{ padding:8px 12px; border-bottom:1px solid {BORDER_COLOR}; }}
@@ -567,7 +626,7 @@ def generate_accuracy_html(data: dict, output_path: str):
       <div style="font-size:10px;color:#065F46;font-weight:600;text-transform:uppercase">Correct</div>
       <div style="font-size:24px;font-weight:700;color:#065F46">{overall.get('correct', 0)}</div>
     </div>
-    <div class="stat-box" style="flex:1;min-width:120px;background:{GOLD}">
+    <div class="stat-box" style="flex:1;min-width:120px;background:{EMERALD}">
       <div style="font-size:10px;color:{NAVY};font-weight:600;text-transform:uppercase">Accuracy</div>
       <div style="font-size:24px;font-weight:700;color:{NAVY}">{escape_html(overall.get('accuracy', 'N/A'))}</div>
     </div>
@@ -612,7 +671,7 @@ class IntelPDF(FPDF):
         self.set_text_color(255, 255, 255)
         self.set_y(4)
         self.cell(0, 10, "INTEL-BRIEFING", ln=True, align="L")
-        self.set_text_color(*GOLD_RGB)
+        self.set_text_color(*TEAL_RGB)
         self.set_font("Helvetica", "", 8)
         self.cell(0, 5, "Intelligence Analysis & Forecasting", ln=True, align="L")
         self.ln(8)
@@ -627,7 +686,7 @@ class IntelPDF(FPDF):
         self.set_font("Helvetica", "B", 14)
         self.set_text_color(*NAVY_RGB)
         self.cell(0, 10, latin_safe(title), ln=True)
-        self.set_draw_color(*GOLD_RGB)
+        self.set_draw_color(*TEAL_RGB)
         self.set_line_width(0.5)
         self.line(10, self.get_y(), 200, self.get_y())
         self.ln(4)
@@ -761,6 +820,49 @@ def generate_briefing_pdf(data: dict, output_path: str):
         preds = geopolitical.get("predictions", [])
         if preds:
             pdf.sub_title("Geopolitical Predictions")
+            rows = [[p.get("prediction", "")[:80], p.get("timeframe", ""),
+                      f"{float(p.get('confidence', 0))*100:.0f}%"] for p in preds]
+            pdf.add_table(["Prediction", "Timeframe", "Confidence"], rows,
+                         [120, 30, 40])
+
+    # Labor Markets & AI Impact
+    labor = data.get("labor_section", {})
+    if labor:
+        pdf.section_title("Labor Markets & AI Impact")
+        lo = labor.get("labor_outlook", {})
+        if lo:
+            pdf.sub_title("Employment Outlook")
+            if lo.get("short_term"):
+                pdf.body_text(f"Short-term (0-12mo): {lo['short_term']}")
+            if lo.get("medium_term"):
+                pdf.body_text(f"Medium-term (1-5yr): {lo['medium_term']}")
+
+        sis = labor.get("sector_impacts", [])
+        if sis:
+            pdf.sub_title("Sector Impact Views")
+            rows = [[si.get("sector", ""), si.get("impact_outlook", "").upper(),
+                      si.get("ai_exposure", "").upper(),
+                      f"{float(si.get('confidence', 0))*100:.0f}%",
+                      si.get("rationale", "")[:50]] for si in sis]
+            pdf.add_table(["Sector", "Impact", "AI Exp.", "Conf.", "Key Factor"], rows,
+                         [35, 25, 20, 18, 92])
+
+        indicators = labor.get("ai_displacement_indicators", [])
+        if indicators:
+            pdf.sub_title("AI Displacement Indicators")
+            for ind in indicators:
+                pdf.set_font("Helvetica", "B", 9)
+                pdf.set_text_color(*NAVY_RGB)
+                pdf.multi_cell(0, 5, latin_safe(f"* {ind.get('indicator', '')}"))
+                pdf.set_font("Helvetica", "I", 8)
+                pdf.set_text_color(100, 116, 139)
+                sectors = ", ".join(ind.get("affected_sectors", []))
+                pdf.cell(0, 5, latin_safe(f"  Sectors: {sectors} | Timeline: {ind.get('timeline', 'N/A')} | Severity: {ind.get('severity', 'N/A').upper()}"), ln=True)
+                pdf.ln(2)
+
+        preds = labor.get("predictions", [])
+        if preds:
+            pdf.sub_title("Labor Predictions")
             rows = [[p.get("prediction", "")[:80], p.get("timeframe", ""),
                       f"{float(p.get('confidence', 0))*100:.0f}%"] for p in preds]
             pdf.add_table(["Prediction", "Timeframe", "Confidence"], rows,
@@ -916,6 +1018,48 @@ def generate_briefing_md(data: dict, output_path: str):
                 lines.append("|------|------------|--------|-----------|")
                 for r in risks:
                     lines.append(f"| {r.get('risk', '')} | {r.get('probability', '').upper()} | {r.get('impact', '').upper()} | {r.get('timeframe', '')} |")
+                lines.append("")
+
+        labor = data.get("labor_section", {})
+        if labor:
+            lines.append("---")
+            lines.append("")
+            lines.append("## Labor Markets & AI Impact")
+            lo = labor.get("labor_outlook", {})
+            if lo:
+                lines.append("### Employment Outlook")
+                if lo.get("short_term"):
+                    lines.append(f"**Short-term (0-12mo):** {lo['short_term']}")
+                if lo.get("medium_term"):
+                    lines.append(f"\n**Medium-term (1-5yr):** {lo['medium_term']}")
+                lines.append("")
+
+            sis = labor.get("sector_impacts", [])
+            if sis:
+                lines.append("### Sector Impact Views")
+                lines.append("| Sector | Impact | AI Exposure | Confidence | Key Factor |")
+                lines.append("|--------|--------|-------------|------------|------------|")
+                for si in sis:
+                    conf = f"{float(si.get('confidence', 0))*100:.0f}%"
+                    lines.append(f"| {si.get('sector', '')} | {si.get('impact_outlook', '').upper()} | {si.get('ai_exposure', '').upper()} | {conf} | {si.get('rationale', '')} |")
+                lines.append("")
+
+            indicators = labor.get("ai_displacement_indicators", [])
+            if indicators:
+                lines.append("### AI Displacement Indicators")
+                for ind in indicators:
+                    sectors = ", ".join(ind.get("affected_sectors", []))
+                    lines.append(f"- **{ind.get('indicator', '')}**: {sectors} | Timeline: {ind.get('timeline', 'N/A')} | Severity: {ind.get('severity', 'N/A').upper()}")
+                lines.append("")
+
+            preds = labor.get("predictions", [])
+            if preds:
+                lines.append("### Labor Predictions")
+                lines.append("| # | Prediction | Timeframe | Confidence | Rationale |")
+                lines.append("|---|-----------|-----------|------------|-----------|")
+                for i, p in enumerate(preds, 1):
+                    conf = f"{float(p.get('confidence', 0))*100:.0f}%"
+                    lines.append(f"| {i} | {p.get('prediction', '')} | {p.get('timeframe', '')} | {conf} | {p.get('rationale', '')} |")
                 lines.append("")
 
         consensus = data.get("consensus_themes", {})

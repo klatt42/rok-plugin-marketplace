@@ -184,7 +184,7 @@ Processed folder: C:\Users\RonKlatt_3qsjg34\Desktop\PlugIn-Intel-Inputs\processe
 
     Cumulative Results:
       Total Claims Extracted: [N]
-        Financial: [n] | Geopolitical: [n] | Technology: [n] | Other: [n]
+        Financial: [n] | Geopolitical: [n] | Technology: [n] | Labor: [n] | Other: [n]
       Total Predictions Extracted: [N]
       Validated Claims: [N] (if validation was run)
       Alert Matches: [N]

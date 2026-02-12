@@ -63,7 +63,7 @@ Create one with:
 
 1. Parse thesis text, category, and confidence from arguments
 2. Validate:
-   - `category` must be one of: financial, geopolitical, technology, economic, other
+   - `category` must be one of: financial, geopolitical, technology, economic, labor, other
    - `confidence` must be between 0.0 and 1.0 (default 0.5 if not provided)
    - `thesis_text` is required
 

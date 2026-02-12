@@ -15,7 +15,7 @@ Run external validation research on unvalidated claims using the research-valida
 
 ### Parameters
 - **all** - Validate all unvalidated claims (processes in batches of 10)
-- **category** - Filter by claim category: `financial`, `geopolitical`, `technology`, `economic`, `market`, `policy`, `military`, `social`, `energy`, `other`
+- **category** - Filter by claim category: `financial`, `geopolitical`, `technology`, `economic`, `market`, `policy`, `military`, `social`, `energy`, `labor`, `other`
 - **limit** - Maximum number of claims to validate (default 10, max 50)
 - **document** - UUID of a specific document to validate claims from
 
