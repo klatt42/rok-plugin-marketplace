@@ -94,6 +94,11 @@
       "name": "camper-finder",
       "source": "./camper-finder",
       "description": "Find real camper and RV inventory listings from aggregator sites. Takes a finder_prompt from camper-recommender output or freeform search, dispatches 2 research agents to search RVTrader, Camping World, General RV, RVUSA, and PPL Motor Homes for actual listings with deal ratings, NADA value validation, and dealer intelligence. Exports to HTML, PDF, and Markdown."
+    },
+    {
+      "name": "intel-briefing",
+      "source": "./intel-briefing",
+      "description": "Intelligence briefing system for continuous document analysis and forecasting. Ingest YouTube videos, URLs, articles, PDFs, and text files. Extract structured claims, validate via external research, generate cumulative master briefings with financial and geopolitical sections, track prediction accuracy with Brier scores, and export to HTML, PDF, and Markdown."
     }
   ]
 }

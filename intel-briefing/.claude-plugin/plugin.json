@@ -1,0 +1,8 @@
+{
+  "name": "intel-briefing",
+  "version": "1.0.0",
+  "description": "Intelligence briefing system for continuous document analysis and forecasting. Ingest YouTube videos, URLs, articles, PDFs, and text files. Generate cumulative master briefings with validated claims, financial forecasts, geopolitical analysis, and scored prediction tracking.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}
