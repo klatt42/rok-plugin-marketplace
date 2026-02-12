@@ -65,6 +65,13 @@ DIMENSION_NAMES = {
     "performance": "Performance",
 }
 
+# Multi-model badge labels and colors
+MODEL_LABELS = {
+    "claude": {"short": "C", "name": "Claude", "color": "#7C3AED", "rgb": (124, 58, 237)},
+    "codex":  {"short": "X", "name": "Codex",  "color": "#10B981", "rgb": (16, 185, 129)},
+    "gemini": {"short": "G", "name": "Gemini", "color": "#3B82F6", "rgb": (59, 130, 246)},
+}
+
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -139,6 +146,47 @@ def group_issues_by_severity(issues: list) -> dict:
     return {k: groups[k] for k in order if k in groups}
 
 
+def format_model_badges_html(source_models):
+    """Generate HTML badge spans for model attribution."""
+    if not source_models:
+        return ""
+    badges = []
+    for model in source_models:
+        info = MODEL_LABELS.get(model, {"short": "?", "name": model, "color": "#888"})
+        badges.append(
+            f'<span style="display:inline-block;background:{info["color"]};color:white;'
+            f'font-size:11px;font-weight:600;padding:2px 6px;border-radius:3px;'
+            f'margin-right:3px;">{info["short"]}</span>'
+        )
+    return "".join(badges)
+
+
+def format_model_agreement(issue):
+    """Format model agreement indicator."""
+    agreement = issue.get("model_agreement", 0)
+    if agreement >= 3:
+        return "3/3"
+    elif agreement == 2:
+        return "2/3"
+    elif agreement == 1:
+        models = issue.get("source_models", [])
+        if models:
+            return f"{MODEL_LABELS.get(models[0], {}).get('name', models[0])} only"
+        return "1/3"
+    return ""
+
+
+def format_model_sources_short(source_models):
+    """Format model sources as short string for PDF (e.g., 'C+X+G' or 'C only')."""
+    if not source_models:
+        return ""
+    shorts = [MODEL_LABELS.get(m, {"short": "?"}).get("short", "?") for m in source_models]
+    if len(shorts) == 1:
+        name = MODEL_LABELS.get(source_models[0], {}).get("name", source_models[0])
+        return f"{name} only"
+    return "+".join(shorts)
+
+
 # ── HTML Generation ────────────────────────────────────────────────────────────
 
 def generate_html(data: dict, output_path: str):
@@ -153,6 +201,11 @@ def generate_html(data: dict, output_path: str):
     recommendations = data.get("recommendations", [])
     tech_stack = escape_html(data.get("tech_stack", ""))
     files_total = data.get("files_reviewed_total", 0)
+
+    review_mode = data.get("review_mode", "single")
+    is_multi = review_mode == "multi"
+    model_scores = data.get("model_scores", {})
+    consensus_analysis = data.get("consensus_analysis", {})
 
     vc = VERDICT_COLORS.get(verdict, VERDICT_COLORS["FAIL"])
 
@@ -178,14 +231,62 @@ def generate_html(data: dict, output_path: str):
           <td style="text-align:center">{dic}</td>
         </tr>"""
 
+    # Build multi-model comparison table (HTML)
+    model_comparison_html = ""
+    if is_multi and model_scores:
+        model_keys = [k for k in ["claude", "codex", "gemini"] if k in model_scores]
+        dim_keys = list(DIMENSION_NAMES.keys())
+        mc_header = "<tr><th>Dimension</th>"
+        for mk in model_keys:
+            ml = MODEL_LABELS.get(mk, {"name": mk})
+            mc_header += f'<th style="text-align:center">{escape_html(ml["name"])}</th>'
+        mc_header += '<th style="text-align:center">Consensus</th></tr>'
+        mc_rows = ""
+        for dk in dim_keys:
+            dn = DIMENSION_NAMES.get(dk, dk)
+            mc_rows += f"<tr><td style='font-weight:600'>{escape_html(dn)}</td>"
+            for mk in model_keys:
+                ms = model_scores.get(mk, {}).get(dk, "")
+                if ms != "":
+                    bg = score_color_bg(int(ms))
+                    tc = score_color_text(int(ms))
+                    mc_rows += f'<td style="text-align:center;background:{bg};color:{tc};font-weight:700">{ms}</td>'
+                else:
+                    mc_rows += '<td style="text-align:center;color:#94A3B8">--</td>'
+            # Consensus = the dimension score from the main dimensions list
+            consensus_score = ""
+            for dim in dimensions:
+                if dim.get("key", dim.get("name", "").lower().replace(" ", "_").replace("/", "_")) == dk or dim.get("name", "") == DIMENSION_NAMES.get(dk, ""):
+                    consensus_score = dim.get("score", "")
+                    break
+            if consensus_score != "":
+                cbg = score_color_bg(int(consensus_score))
+                ctc = score_color_text(int(consensus_score))
+                mc_rows += f'<td style="text-align:center;background:{cbg};color:{ctc};font-weight:700">{consensus_score}</td>'
+            else:
+                mc_rows += '<td style="text-align:center;color:#94A3B8">--</td>'
+            mc_rows += "</tr>"
+        model_comparison_html = f"""
+        <h2>Model Comparison</h2>
+        <table>
+          {mc_header}
+          {mc_rows}
+        </table>"""
+
     # Build issue tables
     grouped = group_issues_by_severity(issues)
     issue_sections = ""
     for sev, sev_issues in grouped.items():
         sc = SEVERITY_COLORS.get(sev, SEVERITY_COLORS["LOW"])
         rows = ""
+        colspan = 6 if is_multi else 5
         for iss in sev_issues:
             fls = ", ".join(f"{f.get('path','')}:{f.get('line','')}" for f in iss.get("files", []))
+            model_col = ""
+            if is_multi:
+                badges = format_model_badges_html(iss.get("source_models", []))
+                agreement = format_model_agreement(iss)
+                model_col = f'<td style="font-size:12px;text-align:center">{badges}<br><span style="font-size:10px;color:#64748B">{escape_html(agreement)}</span></td>'
             rows += f"""
             <tr>
               <td style="font-weight:600">{escape_html(iss.get('id',''))}</td>
@@ -193,14 +294,16 @@ def generate_html(data: dict, output_path: str):
               <td style="font-size:12px;color:#64748B">{escape_html(fls)}</td>
               <td style="font-size:12px">{escape_html(DIMENSION_NAMES.get(iss.get('dimension',''), iss.get('dimension','')))}</td>
               <td style="font-size:12px">{iss.get('confidence', '')}</td>
+              {model_col}
             </tr>
             <tr>
-              <td colspan="5" style="background:{sc['bg']};padding:8px 12px;font-size:13px">
+              <td colspan="{colspan}" style="background:{sc['bg']};padding:8px 12px;font-size:13px">
                 <strong>Issue:</strong> {escape_html(iss.get('description',''))}<br>
                 <strong>Fix:</strong> {escape_html(iss.get('recommendation',''))}
               </td>
             </tr>"""
 
+        models_th = f'<th style="background:{sc["header_bg"]};width:100px">Models</th>' if is_multi else ""
         issue_sections += f"""
         <h2 style="color:{sc['header_bg']}">{sev} Issues ({len(sev_issues)})</h2>
         <table>
@@ -210,6 +313,7 @@ def generate_html(data: dict, output_path: str):
             <th style="background:{sc['header_bg']};width:200px">Location</th>
             <th style="background:{sc['header_bg']};width:100px">Dimension</th>
             <th style="background:{sc['header_bg']};width:60px">Conf.</th>
+            {models_th}
           </tr>
           {rows}
         </table>"""
@@ -225,6 +329,52 @@ def generate_html(data: dict, output_path: str):
             dn = escape_html(dim.get("name", ""))
             items = ", ".join(escape_html(p) for p in pf)
             positive_html += f"<li><strong>{dn}:</strong> {items}</li>"
+
+    # Build consensus analysis section (multi-model only)
+    consensus_html = ""
+    if is_multi and consensus_analysis:
+        high_agreement = consensus_analysis.get("high_agreement_count", 0)
+        unique_findings = consensus_analysis.get("unique_findings", {})
+        dim_disagreements = consensus_analysis.get("dimension_disagreements", [])
+
+        consensus_items = []
+        consensus_items.append(
+            f'<div style="flex:1;background:#E0E7FF;padding:12px 16px;border-radius:6px;text-align:center">'
+            f'<div style="font-size:24px;font-weight:700;color:{INDIGO}">{high_agreement}</div>'
+            f'<div style="font-size:12px;color:{INDIGO}">High Agreement</div></div>'
+        )
+        for mk, count in unique_findings.items():
+            ml = MODEL_LABELS.get(mk, {"name": mk, "color": "#888"})
+            consensus_items.append(
+                f'<div style="flex:1;background:#F1F5F9;padding:12px 16px;border-radius:6px;text-align:center">'
+                f'<div style="font-size:24px;font-weight:700;color:{ml["color"]}">{count}</div>'
+                f'<div style="font-size:12px;color:#64748B">Unique to {escape_html(ml["name"])}</div></div>'
+            )
+
+        consensus_cards = "\n".join(consensus_items)
+        disagreement_rows = ""
+        for dis in dim_disagreements:
+            dim_name = escape_html(DIMENSION_NAMES.get(dis.get("dimension", ""), dis.get("dimension", "")))
+            spread = dis.get("spread", 0)
+            disagreement_rows += f"<tr><td>{dim_name}</td><td style='text-align:center'>{spread} pts</td></tr>"
+
+        disagreement_table = ""
+        if disagreement_rows:
+            disagreement_table = f"""
+            <h3 style="font-size:14px;color:{INDIGO};margin-top:16px">Score Disagreements</h3>
+            <table>
+              <tr><th>Dimension</th><th style="text-align:center">Spread</th></tr>
+              {disagreement_rows}
+            </table>"""
+
+        consensus_html = f"""
+<div class="content">
+  <h2>Consensus Analysis</h2>
+  <div style="display:flex;gap:20px;margin:16px 0">
+    {consensus_cards}
+  </div>
+  {disagreement_table}
+</div>"""
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -360,6 +510,8 @@ def generate_html(data: dict, output_path: str):
     {dim_rows}
   </table>
 
+  {model_comparison_html}
+
   <h2>Executive Summary</h2>
   <p class="text-block">{exec_summary}</p>
 
@@ -395,6 +547,8 @@ def generate_html(data: dict, output_path: str):
 
   {"<h2>Positive Findings</h2><ul>" + positive_html + "</ul>" if positive_html else ""}
 </div>
+
+{consensus_html}
 
 <div class="footer">
   Generated by Claude Code | Production Code Review Plugin | {d}
@@ -446,6 +600,9 @@ def generate_pdf(data: dict, output_path: str):
     dimensions = data.get("dimensions", [])
     issues = data.get("issues", [])
     issue_summary = data.get("issue_summary", {})
+    review_mode = data.get("review_mode", "single")
+    is_multi = review_mode == "multi"
+    model_scores = data.get("model_scores", {})
 
     # ── Verdict + Score ──
     pdf.set_font("Helvetica", "B", 28)
@@ -520,6 +677,72 @@ def generate_pdf(data: dict, output_path: str):
         pdf.ln()
     pdf.ln(4)
 
+    # ── Model Comparison Table (multi-model only) ──
+    if is_multi and model_scores:
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.set_text_color(*INDIGO_RGB)
+        pdf.cell(0, 8, "Model Comparison", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(1)
+
+        model_keys = [k for k in ["claude", "codex", "gemini"] if k in model_scores]
+        mc_headers = ["Dimension"] + [MODEL_LABELS.get(mk, {"name": mk})["name"] for mk in model_keys] + ["Consensus"]
+        num_cols = len(mc_headers)
+        mc_col_w = 170 // num_cols  # distribute across page width
+
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.set_fill_color(*INDIGO_RGB)
+        pdf.set_text_color(255, 255, 255)
+        for hdr in mc_headers:
+            pdf.cell(mc_col_w, 6, hdr, border=1, fill=True, align="C")
+        pdf.ln()
+
+        pdf.set_font("Helvetica", "", 8)
+        dim_keys = list(DIMENSION_NAMES.keys())
+        for d_idx, dk in enumerate(dim_keys):
+            if d_idx % 2 == 0:
+                pdf.set_fill_color(248, 250, 252)
+            else:
+                pdf.set_fill_color(255, 255, 255)
+
+            pdf.set_text_color(60, 60, 60)
+            pdf.cell(mc_col_w, 5.5, latin_safe(DIMENSION_NAMES.get(dk, dk)), border=1, fill=True)
+
+            for mk in model_keys:
+                ms = model_scores.get(mk, {}).get(dk, "")
+                if ms != "":
+                    ms_int = int(ms)
+                    if ms_int >= 85:
+                        pdf.set_text_color(6, 95, 70)
+                    elif ms_int >= 70:
+                        pdf.set_text_color(133, 77, 14)
+                    else:
+                        pdf.set_text_color(153, 27, 27)
+                    pdf.cell(mc_col_w, 5.5, str(ms_int), border=1, fill=True, align="C")
+                else:
+                    pdf.set_text_color(150, 150, 150)
+                    pdf.cell(mc_col_w, 5.5, "--", border=1, fill=True, align="C")
+
+            # Consensus score from dimensions list
+            cons = ""
+            for dim in dimensions:
+                if dim.get("key", dim.get("name", "").lower().replace(" ", "_").replace("/", "_")) == dk or dim.get("name", "") == DIMENSION_NAMES.get(dk, ""):
+                    cons = dim.get("score", "")
+                    break
+            if cons != "":
+                cons_int = int(cons)
+                if cons_int >= 85:
+                    pdf.set_text_color(6, 95, 70)
+                elif cons_int >= 70:
+                    pdf.set_text_color(133, 77, 14)
+                else:
+                    pdf.set_text_color(153, 27, 27)
+                pdf.cell(mc_col_w, 5.5, str(cons_int), border=1, fill=True, align="C")
+            else:
+                pdf.set_text_color(150, 150, 150)
+                pdf.cell(mc_col_w, 5.5, "--", border=1, fill=True, align="C")
+            pdf.ln()
+        pdf.ln(4)
+
     # ── Executive Summary ──
     pdf.set_text_color(*INDIGO_RGB)
     pdf.set_font("Helvetica", "B", 12)
@@ -531,8 +754,12 @@ def generate_pdf(data: dict, output_path: str):
 
     # ── Issues by Severity ──
     grouped = group_issues_by_severity(issues)
-    issue_headers = ["ID", "Issue", "Location", "Dim."]
-    issue_widths = [18, 72, 55, 25]
+    if is_multi:
+        issue_headers = ["ID", "Issue", "Location", "Dim.", "Sources"]
+        issue_widths = [16, 60, 48, 22, 24]
+    else:
+        issue_headers = ["ID", "Issue", "Location", "Dim."]
+        issue_widths = [18, 72, 55, 25]
 
     for sev, sev_issues in grouped.items():
         pdf.set_font("Helvetica", "B", 11)
@@ -563,10 +790,13 @@ def generate_pdf(data: dict, output_path: str):
 
             row_data = [
                 iss.get("id", ""),
-                truncate(iss.get("title", ""), 50),
-                truncate(fls, 38),
-                truncate(dim_label, 16),
+                truncate(iss.get("title", ""), 50 if not is_multi else 42),
+                truncate(fls, 38 if not is_multi else 32),
+                truncate(dim_label, 16 if not is_multi else 14),
             ]
+            if is_multi:
+                sources_str = format_model_sources_short(iss.get("source_models", []))
+                row_data.append(truncate(sources_str, 16))
             for i, val in enumerate(row_data):
                 pdf.cell(issue_widths[i], 5.5, val, border=1, fill=True)
             pdf.ln()
@@ -616,6 +846,10 @@ def generate_md(data: dict, output_path: str):
     recommendations = data.get("recommendations", [])
     tech_stack = data.get("tech_stack", "")
     files_total = data.get("files_reviewed_total", 0)
+    review_mode = data.get("review_mode", "single")
+    is_multi = review_mode == "multi"
+    model_scores = data.get("model_scores", {})
+    consensus_analysis = data.get("consensus_analysis", {})
 
     lines = []
 
@@ -627,6 +861,10 @@ def generate_md(data: dict, output_path: str):
     lines.append(f"score: {score}")
     lines.append(f"stack: {tech_stack}")
     lines.append(f"files_reviewed: {files_total}")
+    if is_multi:
+        lines.append(f"review_mode: {review_mode}")
+        models_used = [k for k in ["claude", "codex", "gemini"] if k in model_scores]
+        lines.append(f"models_used: [{', '.join(models_used)}]")
     lines.append("---")
     lines.append("")
 
@@ -664,6 +902,31 @@ def generate_md(data: dict, output_path: str):
         lines.append(f"| {dn} | {ds}/100 | {dic} |")
     lines.append("")
 
+    # Model Comparison (multi-model only)
+    if is_multi and model_scores:
+        model_keys = [k for k in ["claude", "codex", "gemini"] if k in model_scores]
+        lines.append("## Model Comparison")
+        lines.append("")
+        header_cols = ["Dimension"] + [MODEL_LABELS.get(mk, {"name": mk})["name"] for mk in model_keys] + ["Consensus"]
+        lines.append("| " + " | ".join(header_cols) + " |")
+        lines.append("|" + "|".join(["---"] * len(header_cols)) + "|")
+        dim_keys = list(DIMENSION_NAMES.keys())
+        for dk in dim_keys:
+            dn = DIMENSION_NAMES.get(dk, dk)
+            row = [dn]
+            for mk in model_keys:
+                ms = model_scores.get(mk, {}).get(dk, "")
+                row.append(str(ms) if ms != "" else "--")
+            # Consensus
+            cons = ""
+            for dim in dimensions:
+                if dim.get("key", dim.get("name", "").lower().replace(" ", "_").replace("/", "_")) == dk or dim.get("name", "") == DIMENSION_NAMES.get(dk, ""):
+                    cons = dim.get("score", "")
+                    break
+            row.append(str(cons) if cons != "" else "--")
+            lines.append("| " + " | ".join(row) + " |")
+        lines.append("")
+
     # Issues by Severity
     grouped = group_issues_by_severity(issues)
     for sev, sev_issues in grouped.items():
@@ -679,6 +942,13 @@ def generate_md(data: dict, output_path: str):
             lines.append(f"- **Location**: {fls}")
             lines.append(f"- **Description**: {iss.get('description', '')}")
             lines.append(f"- **Recommendation**: {iss.get('recommendation', '')}")
+            if is_multi and iss.get("source_models"):
+                model_names = [MODEL_LABELS.get(m, {"name": m})["name"] for m in iss["source_models"]]
+                agreement = format_model_agreement(iss)
+                found_by = ", ".join(model_names)
+                if agreement:
+                    found_by += f" ({agreement})"
+                lines.append(f"- **Found by**: {found_by}")
             lines.append("")
 
     # Recommendations
@@ -699,6 +969,29 @@ def generate_md(data: dict, output_path: str):
                 dn = dim.get("name", "")
                 lines.append(f"**{dn}**: {', '.join(pf)}")
                 lines.append("")
+
+    # Consensus Analysis (multi-model only)
+    if is_multi and consensus_analysis:
+        lines.append("## Consensus Analysis")
+        lines.append("")
+        high_agreement = consensus_analysis.get("high_agreement_count", 0)
+        lines.append(f"- **High agreement issues**: {high_agreement}")
+        unique_findings = consensus_analysis.get("unique_findings", {})
+        for mk, count in unique_findings.items():
+            ml = MODEL_LABELS.get(mk, {"name": mk})
+            lines.append(f"- **Unique to {ml['name']}**: {count}")
+        dim_disagreements = consensus_analysis.get("dimension_disagreements", [])
+        if dim_disagreements:
+            lines.append("")
+            lines.append("### Score Disagreements")
+            lines.append("")
+            lines.append("| Dimension | Spread |")
+            lines.append("|-----------|--------|")
+            for dis in dim_disagreements:
+                dim_name = DIMENSION_NAMES.get(dis.get("dimension", ""), dis.get("dimension", ""))
+                spread = dis.get("spread", 0)
+                lines.append(f"| {dim_name} | {spread} pts |")
+        lines.append("")
 
     # Footer
     lines.append("---")

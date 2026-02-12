@@ -83,3 +83,52 @@ For backend-only or non-UI projects:
 - Skip UI/UX and Responsive dimensions
 - Redistribute weights: Quality 25%, Testing 25%, Security 30%, Performance 20%
 - Adjust scoring formula accordingly
+
+## Multi-Model Scoring (v2.0)
+
+When `review_mode` is `"multi"`, the scoring formula extends to handle consensus across Claude, Codex, and Gemini.
+
+### Per-Dimension Consensus Score
+
+```
+consensus_score[d] = mean(model_scores[d] for each model that successfully reported)
+
+If all 3 models agree within 10 points: consensus_score[d] += 2 (harmony bonus, cap 100)
+If model score spread > 25 points: flag "model_disagreement" for dimension d
+```
+
+### Issue Confidence Boost
+
+Issues found by multiple models receive a confidence boost:
+
+```
+boosted_confidence = base_confidence + (model_agreement - 1) * 5
+Capped at 100
+```
+
+| Models Agree | Confidence Boost | Significance |
+|-------------|-----------------|--------------|
+| 1 model | +0 | Unique finding -- still valuable |
+| 2 models | +5 | Likely real issue |
+| 3 models | +10 | High-confidence consensus |
+
+### Final Score Formula (Multi-Model)
+
+Same weighted formula as single-model, using consensus_score[d] for each dimension:
+
+```
+weighted = consensus_code_quality*0.20 + consensus_testing*0.20 +
+           consensus_ui_ux*0.15 + consensus_responsive*0.15 +
+           consensus_security*0.20 + consensus_performance*0.10
+
+penalties = (critical * 10) + (high * 3)
+final = max(0, min(100, round(weighted - penalties)))
+```
+
+Verdict thresholds unchanged from single-model.
+
+### Issue Sorting (Multi-Model)
+
+1. By model_agreement DESC (consensus findings first)
+2. By severity: CRITICAL > HIGH > MEDIUM > LOW
+3. By confidence DESC

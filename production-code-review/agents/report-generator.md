@@ -5,6 +5,7 @@ description: |
   code review report. Calculates production readiness score, merges
   and deduplicates findings, constructs the export JSON payload,
   and triggers the export script to generate MD, PDF, and HTML.
+  Supports both single-model and multi-model review payloads.
 tools: Read, Write, Bash, Glob, Grep
 model: sonnet
 ---
@@ -25,6 +26,8 @@ You receive the structured JSON outputs from all 6 review agents and synthesize 
 - If multiple agents flag the same file:line, merge into one issue
 - Keep the highest severity and highest confidence
 - Combine recommendations from multiple perspectives
+
+**Multi-model mode**: If `review_mode` is "multi", deduplication includes cross-model merging. Issues from different models targeting the same file:line are merged with the highest severity and boosted confidence. Each issue gains `source_models` and `model_agreement` fields.
 
 ### Step 3: Calculate Production Readiness Score
 
@@ -66,6 +69,10 @@ Then clean up: rm /tmp/code_review_export.json
 ```json
 {
   "type": "code_review",
+  "review_mode": "single|multi",
+  "models_used": ["claude"],
+  "model_scores": {},
+  "consensus_analysis": {},
   "project_name": "...",
   "project_path": "/path/to/project",
   "date": "YYYY-MM-DD",
@@ -92,7 +99,9 @@ Then clean up: rm /tmp/code_review_export.json
       "description": "...",
       "files": [{"path": "...", "line": 42}],
       "recommendation": "...",
-      "category": "..."
+      "category": "...",
+      "source_models": ["claude"],
+      "model_agreement": 1
     }
   ],
   "issue_summary": {
@@ -115,3 +124,6 @@ Then clean up: rm /tmp/code_review_export.json
 - Never fabricate findings -- only synthesize what agents reported
 - Include positive findings for balanced assessment
 - Provide actionable recommendations, prioritized by impact
+- For multi-model payloads, include model_scores and consensus_analysis in the export JSON
+- Sort multi-model issues by model_agreement DESC, then severity, then confidence
+- Include all `source_models` and `model_agreement` data in each issue

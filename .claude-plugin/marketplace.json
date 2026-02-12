@@ -63,7 +63,7 @@
     {
       "name": "production-code-review",
       "source": "./production-code-review",
-      "description": "Comprehensive pre-production code review with 6 specialized subagents analyzing code quality, test coverage, UI/UX, responsive design, security, and performance in parallel. Generates scored reports with production readiness verdict exported to MD, PDF, and HTML."
+      "description": "Multi-model production code review supporting Claude, Codex CLI, and Gemini CLI in single or parallel mode. 6 specialized dimensions with consensus scoring across models. Generates scored reports with production readiness verdict exported to MD, PDF, and HTML."
     },
     {
       "name": "business-idea-analyzer",
