@@ -99,6 +99,11 @@
       "name": "intel-briefing",
       "source": "./intel-briefing",
       "description": "Intelligence briefing system for continuous document analysis and forecasting. Ingest YouTube videos, URLs, articles, PDFs, and text files. Extract structured claims, validate via external research, generate cumulative master briefings with financial, geopolitical, and labor market sections including AI impact analysis, track prediction accuracy with Brier scores, and export to HTML, PDF, and Markdown."
+    },
+    {
+      "name": "plugin-idea-generator",
+      "source": "./plugin-idea-generator",
+      "description": "Generate novel Claude Code plugin ideas personalized to your skills, existing plugin portfolio, project history, and current AI trends. Each idea includes marketization pathway scoring for transitioning from personal tool to sellable product (SaaS, Chrome extension, API). Portfolio-aware with triple scoring: Personal Utility, Marketization Potential, and Novelty."
     }
   ]
 }
