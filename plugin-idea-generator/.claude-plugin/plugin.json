@@ -1,0 +1,5 @@
+{
+  "name": "plugin-idea-generator",
+  "version": "1.0.0",
+  "description": "Generate novel Claude Code plugin ideas personalized to your skills, existing plugin portfolio, project history, and current AI trends. Each idea includes marketization pathway scoring for transitioning from personal tool to sellable product (SaaS, Chrome extension, API). Portfolio-aware with triple scoring: Personal Utility, Marketization Potential, and Novelty."
+}
