@@ -38,6 +38,13 @@ For EACH query, structure as:
 - `"no way to verify" OR "can't trust" OR "reputation" [platform/industry] site:reddit.com`
 - `"portable reputation" OR "reviews locked" OR "trust across platforms"`
 
+**Protection & Safety** (always include 2-3 of these):
+- `"fraud" OR "scam" OR "scammed" [industry/platform] site:reddit.com`
+- `"protect" OR "protection" OR "insurance" [niche] small business tools`
+- `"lost money" OR "financial loss" [platform/industry] seller`
+- `"verification" OR "trust" OR "fake" [marketplace/platform]`
+- `"platform enforcement" OR "ban" OR "suspended" unfair [platform]`
+
 Run the number of searches specified in your prompt (8-12 for explore, 15-20 for deep-scan).
 
 ### Output Format
@@ -55,12 +62,16 @@ Return valid JSON (no markdown wrapping):
         {"source": "reddit r/smallbusiness", "url": "https://...", "signal": "Thread with 45 upvotes about X frustration", "date": "2026-01"}
       ],
       "affected_segment": "Who has this pain (e.g., 'HVAC contractors managing 10-50 jobs/month')",
+      "pain_category": "productivity|revenue|protection|compliance|communication|other",
       "frequency": "daily|weekly|monthly|event-driven",
       "current_workarounds": "What they do today (spreadsheets, manual process, expensive enterprise tool)",
       "opportunity_type": "SaaS|Chrome Extension|API|Mobile App|Automation Tool",
       "profile_fit_notes": "Why this fits the operator profile (or concerns about fit)",
       "ai_angle": "How AI specifically improves this over existing non-AI solutions",
-      "network_potential": "single-user|network-optional|network-required — Could this pain be solved with a single-user tool, or does it require a network/community?"
+      "network_potential": "single-user|network-optional|network-required — Could this pain be solved with a single-user tool, or does it require a network/community?",
+      "known_competitors": [
+        {"name": "Tool name", "relevance": "direct|partial|indirect", "weakness": "Key weakness observed"}
+      ]
     }
   ],
   "meta": {
@@ -75,5 +86,7 @@ Return valid JSON (no markdown wrapping):
 - Every discovery must have at least 1 evidence item with a source URL.
 - Filter out anything hitting exclusions: e-commerce, dropshipping, real estate investing, consumer apps.
 - Prioritize pain points where the current solution is "manual/spreadsheet" or "expensive enterprise tool" — these are the highest-opportunity gaps for micro-SaaS.
+- Classify each discovery with a `pain_category`. Protection/financial-loss pain points (category: "protection") have dramatically higher willingness-to-pay than productivity pain points — a tool that prevents $500/month in fraud losses beats a tool that saves 30 minutes of listing time. Flag these prominently.
 - If a topic is provided, focus all searches on that topic space. If no topic, scan broadly across the source list.
+- If a source pack is specified (e.g., `ecommerce-reseller`), APPEND those additional sources from the source-map to your standard research sources. Allocate 2-3 of your searches to the pack-specific sources.
 - Include the `ai_angle` for every discovery — if there's no clear AI advantage, still note it but flag it as "AI optional."

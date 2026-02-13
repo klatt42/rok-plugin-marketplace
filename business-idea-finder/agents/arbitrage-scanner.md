@@ -75,7 +75,7 @@ Return valid JSON (no markdown wrapping):
 - Only report opportunities with REAL evidence (URLs, announcements, video links). Never fabricate.
 - Every discovery must have at least 1 evidence item with a source URL.
 - Filter out anything hitting exclusions: e-commerce, dropshipping, real estate investing, consumer apps.
-- Prioritize opportunities with the SHORTEST arbitrage window — time-sensitive beats evergreen.
+- Balance window freshness (market demand signal) against durability (competitive moat). A 6-12 month window with a data moat beats a 3-month window with speed-only advantage. Short windows (3-6 months) should be flagged as high commoditization risk unless paired with a defensible moat.
 - The `enabling_technology` field is critical — every arbitrage opportunity must clearly link to a specific new capability.
 - Be skeptical of hype. An AI wrapper around an existing tool is NOT arbitrage unless it fundamentally changes the user experience or economics.
 - If a topic is provided, focus all searches on that topic space. If no topic, scan broadly for the freshest opportunities.

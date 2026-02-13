@@ -36,6 +36,13 @@
 - Tool-specific hate threads
 - "Looking for alternative to [tool]" tweets
 
+### Protection & Safety Sources
+- BBB complaints for industry-specific tools and platforms
+- IC3 (Internet Crime Complaint Center) — fraud trend data
+- Platform help forums (Facebook Help Community, eBay Community, etc.) — enforcement complaints
+- r/Scams, r/legaladvice — fraud pattern discussions relevant to target niche
+- FTC consumer complaint data — industry-level fraud statistics
+
 ### Google Search Patterns
 - `"frustrated with [tool]" site:reddit.com`
 - `"wish there was" OR "need a tool" [industry]`
@@ -104,3 +111,35 @@
 - @levelsio — Indie hacker revenue sharing
 - @marclouv — Solo SaaS builder insights
 - AI developer community — New capability discussions
+
+---
+
+## Source Packs (Niche-Specific)
+
+Source packs are activated via `--sources=<pack-name>` in `/find-ideas`. When active, agents APPEND these sources to their standard research sources. Default behavior (no flag or `--sources=default`) uses only the standard sources above.
+
+### ecommerce-reseller
+**Additional Reddit**: r/Flipping, r/FacebookMarketplace, r/eBaySellers, r/poshmark, r/mercari, r/Depop
+**Additional communities**: Facebook Groups (search for "[platform] sellers group"), reseller YouTube channels (search comments), TikTok reseller content
+**Additional review mining**: App Store / Play Store reviews for Vendoo, List Perfectly, Mercari, OfferUp, Poshmark apps — mine 1-star reviews for unmet needs
+**Additional safety**: BBB complaints for marketplace platforms, IC3 marketplace fraud reports
+**Search patterns**:
+- `site:reddit.com r/Flipping OR r/FacebookMarketplace "[pain keyword]"`
+- `"[app name]" app store review "doesn't" OR "can't" OR "wish" OR "missing"`
+- `"marketplace seller" frustrated OR "wish there was" [platform]`
+
+### home-services
+**Additional Reddit**: r/HomeInspections, r/PropertyManagement, r/landscaping, r/Roofing, r/GeneralContractor
+**Additional sources**: Angi/HomeAdvisor contractor forums, Thumbtack provider discussions, Nextdoor contractor threads
+**Additional review mining**: G2/Capterra reviews for ServiceTitan, Housecall Pro, Jobber — mine negative reviews
+**Search patterns**:
+- `site:reddit.com r/contractor OR r/HVAC "[tool category]" frustrated OR "looking for"`
+- `"home services" OR "field service" software "doesn't" OR "wish" OR "terrible"`
+
+### saas-builder
+**Additional Reddit**: r/webdev, r/nextjs, r/selfhosted, r/devtools, r/ChatGPTCoding
+**Additional sources**: HackerNews "Ask HN: What should I build?" threads, Product Hunt trending daily, IndieHackers revenue milestones
+**Additional review mining**: G2 reviews for developer tools, Vercel/Supabase community feature requests
+**Search patterns**:
+- `site:news.ycombinator.com "what should I build" OR "looking for tool" 2026`
+- `site:reddit.com r/SaaS OR r/microsaas "wish there was" OR "someone should build"`

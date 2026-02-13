@@ -1,7 +1,7 @@
 {
   "name": "business-idea-finder",
-  "version": "1.1.0",
-  "description": "Discover micro-SaaS and AI tool business ideas through pain point mining, gap analysis, and technology arbitrage scanning. Profile-filtered for solopreneur builders. Outputs ranked shortlists that feed into business-idea-analyzer for deep evaluation.",
+  "version": "1.2.0",
+  "description": "Discover micro-SaaS and AI tool business ideas through pain point mining, gap analysis, category transfer detection, and technology arbitrage scanning. Profile-filtered for solopreneur builders with ecosystem, defensibility, and build complexity scoring. Outputs ranked shortlists that feed into business-idea-analyzer for deep evaluation.",
   "author": {
     "name": "ROK Agency"
   }

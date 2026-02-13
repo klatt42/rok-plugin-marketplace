@@ -82,6 +82,8 @@ def generate_html(data, output_path):
     shortlist = data.get('shortlist', [])
     themes = data.get('themes', {})
     methodology = data.get('methodology', {})
+    consolidation_groups = data.get('consolidation_groups', [])
+    coverage = data.get('coverage', {})
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -461,13 +463,14 @@ def generate_html(data, output_path):
                         <tr>
                             <th style="width: 60px;">Rank</th>
                             <th>Idea Name</th>
-                            <th style="width: 100px;">Tier</th>
-                            <th style="width: 120px;">Score</th>
-                            <th style="width: 120px;">Profile Fit</th>
-                            <th style="width: 140px;">Opportunity</th>
-                            <th style="width: 100px;">Type</th>
-                            <th style="width: 120px;">Build Time</th>
-                            <th style="width: 130px;">Window</th>
+                            <th style="width: 80px;">Tier</th>
+                            <th style="width: 100px;">Score</th>
+                            <th style="width: 80px;">Fit</th>
+                            <th style="width: 90px;">Demand</th>
+                            <th style="width: 100px;">Durability</th>
+                            <th style="width: 70px;">Eco</th>
+                            <th style="width: 90px;">Type</th>
+                            <th style="width: 110px;">Moat</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -480,10 +483,11 @@ def generate_html(data, output_path):
         tier = idea.get('tier', 'WATCH')
         composite = idea.get('composite_score', 0)
         profile_fit = idea.get('profile_fit', 0)
-        opportunity = idea.get('opportunity_signal', 0)
+        demand = idea.get('market_demand', idea.get('opportunity_signal', 0))
+        durability = idea.get('competitive_durability', 0)
+        eco = idea.get('ecosystem_score', 0)
         opp_type = idea.get('opportunity_type', 'Unknown')
-        build_time = idea.get('estimated_build_time', 'N/A')
-        window = idea.get('arbitrage_window', 'N/A')
+        moat_type = idea.get('moat_type', 'N/A')
 
         tier_style = f"background: {TIER_COLORS.get(tier, TIER_COLORS['WATCH'])['bg']}; color: {TIER_COLORS.get(tier, TIER_COLORS['WATCH'])['text']};"
 
@@ -505,14 +509,25 @@ def generate_html(data, output_path):
                                 </div>
                             </td>
                             <td>
-                                <div class="score" style="color: {score_color(opportunity)};">{opportunity}</div>
+                                <div class="score" style="color: {score_color(demand)};">{demand}</div>
                                 <div class="score-bar">
-                                    <div class="score-fill" style="width: {opportunity}%; background: {score_color(opportunity)};"></div>
+                                    <div class="score-fill" style="width: {demand}%; background: {score_color(demand)};"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="score" style="color: {score_color(durability)};">{durability}</div>
+                                <div class="score-bar">
+                                    <div class="score-fill" style="width: {durability}%; background: {score_color(durability)};"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="score" style="color: {score_color(eco)};">{eco}</div>
+                                <div class="score-bar">
+                                    <div class="score-fill" style="width: {eco}%; background: {score_color(eco)};"></div>
                                 </div>
                             </td>
                             <td>{opp_type}</td>
-                            <td>{build_time}</td>
-                            <td>{window}</td>
+                            <td>{moat_type.replace('_', ' ').title()}</td>
                         </tr>
 """
 
@@ -534,8 +549,18 @@ def generate_html(data, output_path):
         composite = idea.get('composite_score', 0)
         profile_fit = idea.get('profile_fit', 0)
         opportunity = idea.get('opportunity_signal', 0)
+        demand = idea.get('market_demand', idea.get('opportunity_signal', 0))
+        durability = idea.get('competitive_durability', 0)
+        eco = idea.get('ecosystem_score', 0)
+        eco_note = idea.get('ecosystem_note', '')
+        moat_type = idea.get('moat_type', 'N/A')
+        build_estimate = idea.get('build_estimate', {})
         opp_type = idea.get('opportunity_type', 'Unknown')
-        build_time = idea.get('estimated_build_time', 'N/A')
+        build_time = build_estimate.get('mvp', idea.get('estimated_build_time', 'N/A'))
+        build_beta = build_estimate.get('beta', 'N/A')
+        build_prod = build_estimate.get('production', 'N/A')
+        maintenance_profile = build_estimate.get('maintenance_profile', 'N/A')
+        competitors = idea.get('competitors', [])
         window = idea.get('arbitrage_window', 'N/A')
         evidence = idea.get('key_evidence', '')
         ai_advantage = idea.get('ai_advantage', '')
@@ -572,19 +597,41 @@ def generate_html(data, output_path):
                             </div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Opportunity Signal</div>
-                            <div class="detail-value" style="color: {score_color(opportunity)};">{opportunity}</div>
+                            <div class="detail-label">Market Demand</div>
+                            <div class="detail-value" style="color: {score_color(demand)};">{demand}</div>
                             <div class="score-bar">
-                                <div class="score-fill" style="width: {opportunity}%; background: {score_color(opportunity)};"></div>
+                                <div class="score-fill" style="width: {demand}%; background: {score_color(demand)};"></div>
                             </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Competitive Durability</div>
+                            <div class="detail-value" style="color: {score_color(durability)};">{durability}</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: {durability}%; background: {score_color(durability)};"></div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Ecosystem Score</div>
+                            <div class="detail-value" style="color: {score_color(eco)};">{eco}</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: {eco}%; background: {score_color(eco)};"></div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Moat Type</div>
+                            <div class="detail-value">{moat_type.replace('_', ' ').title()}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Opportunity Type</div>
                             <div class="detail-value">{opp_type}</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Build Time</div>
-                            <div class="detail-value">{build_time}</div>
+                            <div class="detail-label">Build Estimate</div>
+                            <div class="detail-value">MVP: {build_time} / Beta: {build_beta} / Prod: {build_prod}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Maintenance Profile</div>
+                            <div class="detail-value">{maintenance_profile}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Arbitrage Window</div>
@@ -617,6 +664,25 @@ def generate_html(data, output_path):
                     <div class="ai-advantage">
                         <div class="ai-advantage-title">AI Advantage</div>
                         <div>{ai_advantage}</div>
+                    </div>
+"""
+
+        if competitors:
+            html += """
+                    <div style="margin-bottom: 1rem;">
+                        <div class="detail-label">Competitors</div>
+                        <table style="width:100%; font-size:0.9rem; border-collapse:collapse; margin-top:0.5rem;">
+                            <tr style="background:#f0fdfa;"><th style="padding:0.5rem; text-align:left;">Competitor</th><th style="padding:0.5rem; text-align:left;">Relevance</th><th style="padding:0.5rem; text-align:left;">Strength</th><th style="padding:0.5rem; text-align:left;">Key Weakness</th></tr>
+"""
+            for comp in competitors:
+                c_name = comp.get('name', 'Unknown')
+                c_rel = comp.get('relevance', 'N/A')
+                c_str = comp.get('strength', 'N/A')
+                c_weak = comp.get('key_weakness', 'N/A')
+                html += f'                            <tr><td style="padding:0.5rem; border-bottom:1px solid #e5e7eb;">{c_name}</td><td style="padding:0.5rem; border-bottom:1px solid #e5e7eb;">{c_rel}</td><td style="padding:0.5rem; border-bottom:1px solid #e5e7eb;">{c_str}</td><td style="padding:0.5rem; border-bottom:1px solid #e5e7eb;">{c_weak}</td></tr>\n'
+
+            html += """
+                        </table>
                     </div>
 """
 
@@ -687,6 +753,51 @@ def generate_html(data, output_path):
             </div>
 """
 
+    # Add consolidation groups section
+    if consolidation_groups:
+        html += """
+            <div class="section">
+                <h2 class="section-title">Consolidation Opportunities</h2>
+"""
+
+        for group in consolidation_groups:
+            g_name = group.get('group_name', 'Unnamed Group')
+            g_ideas = group.get('ideas', [])
+            g_overlap = group.get('overlapping_capabilities', '')
+            g_eco_note = group.get('ecosystem_note', '')
+            idea_ranks = ', '.join([f'#{r}' for r in g_ideas])
+
+            html += f"""
+                <div class="idea-card" style="border-left: 4px solid {TEAL};">
+                    <div class="idea-title" style="font-size:1.2rem; margin-bottom:0.8rem;">{g_name}</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Ideas</div>
+                            <div class="detail-value">{idea_ranks}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Overlapping Capabilities</div>
+                            <div class="detail-value">{g_overlap}</div>
+                        </div>
+"""
+
+            if g_eco_note:
+                html += f"""
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <div class="detail-label">Ecosystem Note</div>
+                            <div class="detail-value">{g_eco_note}</div>
+                        </div>
+"""
+
+            html += """
+                    </div>
+                </div>
+"""
+
+        html += """
+            </div>
+"""
+
     # Add methodology section
     if methodology:
         html += """
@@ -730,6 +841,31 @@ def generate_html(data, output_path):
 
         html += """
                 </div>
+            </div>
+"""
+
+    # Add coverage section
+    if coverage:
+        blind_spots = coverage.get('blind_spots', 'None identified')
+        zero_results = coverage.get('categories_with_zero_results', [])
+        zero_results_str = ', '.join(zero_results) if zero_results else 'None'
+        comparable_checked = coverage.get('comparable_ecosystems_checked', [])
+        comparable_str = ', '.join(comparable_checked) if comparable_checked else 'None'
+        categories_scanned = coverage.get('categories_scanned', 0)
+        no_signal = coverage.get('source_types_with_no_signal', [])
+        no_signal_str = ', '.join(no_signal) if no_signal else 'None'
+        unmatched = coverage.get('unmatched_comparable_categories', [])
+        unmatched_str = ', '.join(unmatched) if unmatched else 'None'
+
+        html += f"""
+            <div class="methodology" style="margin-top:1rem;">
+                <h3 style="margin-bottom: 1rem; color: #1f2937;">Coverage Notes</h3>
+                <p><strong>Categories Scanned:</strong> {categories_scanned}</p>
+                <p><strong>Blind Spots:</strong> {blind_spots}</p>
+                <p><strong>Categories with zero results:</strong> {zero_results_str}</p>
+                <p><strong>Source types with no signal:</strong> {no_signal_str}</p>
+                <p><strong>Comparable ecosystems checked:</strong> {comparable_str}</p>
+                <p><strong>Unmatched comparable categories:</strong> {unmatched_str}</p>
             </div>
 """
 
@@ -823,11 +959,11 @@ def generate_pdf(data, output_path):
     pdf.set_fill_color(13, 148, 136)
     pdf.set_text_color(255, 255, 255)
     pdf.cell(12, 8, '#', 1, 0, 'C', True)
-    pdf.cell(60, 8, 'Idea Name', 1, 0, 'C', True)
+    pdf.cell(52, 8, 'Idea Name', 1, 0, 'C', True)
     pdf.cell(20, 8, 'Tier', 1, 0, 'C', True)
     pdf.cell(20, 8, 'Score', 1, 0, 'C', True)
-    pdf.cell(30, 8, 'Build Time', 1, 0, 'C', True)
-    pdf.cell(38, 8, 'Window', 1, 1, 'C', True)
+    pdf.cell(24, 8, 'Demand', 1, 0, 'C', True)
+    pdf.cell(28, 8, 'Durability', 1, 1, 'C', True)
 
     # Table rows
     pdf.set_font('Arial', '', 9)
@@ -838,15 +974,15 @@ def generate_pdf(data, output_path):
         name = idea.get('idea_name', 'Unnamed Idea')
         tier = idea.get('tier', 'WATCH')
         composite = idea.get('composite_score', 0)
-        build_time = idea.get('estimated_build_time', 'N/A')
-        window = idea.get('arbitrage_window', 'N/A')
+        demand = idea.get('market_demand', idea.get('opportunity_signal', 0))
+        durability = idea.get('competitive_durability', 0)
 
         pdf.cell(12, 8, str(rank), 1, 0, 'C')
-        pdf.cell(60, 8, latin_safe(name[:35]), 1, 0)
+        pdf.cell(52, 8, latin_safe(name[:30]), 1, 0)
         pdf.cell(20, 8, tier, 1, 0, 'C')
         pdf.cell(20, 8, str(composite), 1, 0, 'C')
-        pdf.cell(30, 8, latin_safe(build_time), 1, 0, 'C')
-        pdf.cell(38, 8, latin_safe(window), 1, 1, 'C')
+        pdf.cell(24, 8, str(demand), 1, 0, 'C')
+        pdf.cell(28, 8, str(durability), 1, 1, 'C')
 
     pdf.ln(10)
 
@@ -868,8 +1004,16 @@ def generate_pdf(data, output_path):
         composite = idea.get('composite_score', 0)
         profile_fit = idea.get('profile_fit', 0)
         opportunity = idea.get('opportunity_signal', 0)
+        demand = idea.get('market_demand', idea.get('opportunity_signal', 0))
+        durability = idea.get('competitive_durability', 0)
+        eco = idea.get('ecosystem_score', 0)
+        moat_type = idea.get('moat_type', 'N/A')
+        build_estimate = idea.get('build_estimate', {})
         opp_type = idea.get('opportunity_type', 'Unknown')
-        build_time = idea.get('estimated_build_time', 'N/A')
+        build_time = build_estimate.get('mvp', idea.get('estimated_build_time', 'N/A'))
+        build_beta = build_estimate.get('beta', 'N/A')
+        build_prod = build_estimate.get('production', 'N/A')
+        competitors = idea.get('competitors', [])
         window = idea.get('arbitrage_window', 'N/A')
         evidence = idea.get('key_evidence', '')
         ai_advantage = idea.get('ai_advantage', '')
@@ -892,9 +1036,15 @@ def generate_pdf(data, output_path):
         pdf.cell(60, 6, latin_safe(f'Profile Fit: {profile_fit}'), 0, 0)
         pdf.cell(60, 6, latin_safe(f'Opportunity: {opportunity}'), 0, 1)
 
+        pdf.cell(60, 6, latin_safe(f'Market Demand: {demand}'), 0, 0)
+        pdf.cell(60, 6, latin_safe(f'Durability: {durability}'), 0, 0)
+        pdf.cell(60, 6, latin_safe(f'Ecosystem: {eco}'), 0, 1)
+
         pdf.cell(60, 6, latin_safe(f'Type: {opp_type}'), 0, 0)
-        pdf.cell(60, 6, latin_safe(f'Build Time: {build_time}'), 0, 0)
+        pdf.cell(60, 6, latin_safe(f'Moat: {moat_type.replace("_", " ").title()}'), 0, 0)
         pdf.cell(60, 6, latin_safe(f'Window: {window}'), 0, 1)
+
+        pdf.cell(0, 6, latin_safe(f'Build: MVP {build_time} / Beta {build_beta} / Prod {build_prod}'), 0, 1)
 
         pdf.ln(3)
 
@@ -912,6 +1062,19 @@ def generate_pdf(data, output_path):
             pdf.cell(0, 6, latin_safe('AI Advantage:'), 0, 1)
             pdf.set_font('Arial', '', 9)
             pdf.multi_cell(0, 5, latin_safe(ai_advantage))
+            pdf.ln(2)
+
+        # Competitors
+        if competitors:
+            pdf.set_font('Arial', 'B', 10)
+            pdf.cell(0, 6, latin_safe('Competitors:'), 0, 1)
+            pdf.set_font('Arial', '', 9)
+            for comp in competitors:
+                c_name = comp.get('name', 'Unknown')
+                c_rel = comp.get('relevance', 'N/A')
+                c_str = comp.get('strength', 'N/A')
+                c_weak = comp.get('key_weakness', 'N/A')
+                pdf.cell(0, 5, latin_safe(f'- {c_name} ({c_rel}): Strong in {c_str}, weak in {c_weak}'), 0, 1)
             pdf.ln(2)
 
         # Discovery modes
@@ -955,6 +1118,66 @@ def generate_pdf(data, output_path):
             pdf.set_font('Arial', '', 10)
             pdf.multi_cell(0, 5, latin_safe(themes['strongest_arbitrage']))
 
+    # Consolidation groups section
+    consolidation_groups = data.get('consolidation_groups', [])
+    if consolidation_groups:
+        pdf.ln(10)
+        pdf.set_font('Arial', 'B', 14)
+        pdf.set_text_color(15, 118, 110)
+        pdf.cell(0, 10, latin_safe('Consolidation Opportunities'), 0, 1)
+        pdf.ln(3)
+
+        for group in consolidation_groups:
+            g_name = group.get('group_name', 'Unnamed Group')
+            g_ideas = group.get('ideas', [])
+            g_overlap = group.get('overlapping_capabilities', '')
+            g_eco_note = group.get('ecosystem_note', '')
+            idea_ranks = ', '.join([f'#{r}' for r in g_ideas])
+
+            pdf.set_font('Arial', 'B', 11)
+            pdf.set_text_color(15, 118, 110)
+            pdf.cell(0, 7, latin_safe(g_name), 0, 1)
+
+            pdf.set_font('Arial', '', 10)
+            pdf.set_text_color(0, 0, 0)
+            pdf.cell(0, 6, latin_safe(f'Ideas: {idea_ranks}'), 0, 1)
+            pdf.cell(0, 6, latin_safe(f'Overlapping: {g_overlap}'), 0, 1)
+
+            if g_eco_note:
+                pdf.cell(0, 6, latin_safe(f'Ecosystem Note: {g_eco_note}'), 0, 1)
+
+            pdf.ln(3)
+
+    # Coverage section
+    coverage = data.get('coverage', {})
+    if coverage:
+        pdf.ln(5)
+        pdf.set_font('Arial', 'B', 14)
+        pdf.set_text_color(15, 118, 110)
+        pdf.cell(0, 10, latin_safe('Coverage Notes'), 0, 1)
+        pdf.ln(3)
+
+        pdf.set_font('Arial', '', 10)
+        pdf.set_text_color(0, 0, 0)
+
+        categories_scanned = coverage.get('categories_scanned', 0)
+        blind_spots = coverage.get('blind_spots', 'None identified')
+        zero_results = coverage.get('categories_with_zero_results', [])
+        zero_str = ', '.join(zero_results) if zero_results else 'None'
+        no_signal = coverage.get('source_types_with_no_signal', [])
+        no_signal_str = ', '.join(no_signal) if no_signal else 'None'
+        comparable = coverage.get('comparable_ecosystems_checked', [])
+        comparable_str = ', '.join(comparable) if comparable else 'None'
+        unmatched = coverage.get('unmatched_comparable_categories', [])
+        unmatched_str = ', '.join(unmatched) if unmatched else 'None'
+
+        pdf.cell(0, 6, latin_safe(f'Categories Scanned: {categories_scanned}'), 0, 1)
+        pdf.cell(0, 6, latin_safe(f'Blind Spots: {blind_spots}'), 0, 1)
+        pdf.cell(0, 6, latin_safe(f'Categories with zero results: {zero_str}'), 0, 1)
+        pdf.cell(0, 6, latin_safe(f'Source types with no signal: {no_signal_str}'), 0, 1)
+        pdf.cell(0, 6, latin_safe(f'Comparable ecosystems checked: {comparable_str}'), 0, 1)
+        pdf.cell(0, 6, latin_safe(f'Unmatched comparable categories: {unmatched_str}'), 0, 1)
+
     pdf.output(output_path)
 
 
@@ -966,6 +1189,8 @@ def generate_markdown(data, output_path):
     shortlist = data.get('shortlist', [])
     themes = data.get('themes', {})
     methodology = data.get('methodology', {})
+    consolidation_groups = data.get('consolidation_groups', [])
+    coverage = data.get('coverage', {})
 
     md = f"""# Business Idea Finder
 
@@ -995,8 +1220,8 @@ def generate_markdown(data, output_path):
 
 ## Shortlist Overview
 
-| Rank | Idea Name | Tier | Score | Profile Fit | Opportunity | Type | Build Time | Window |
-|------|-----------|------|-------|-------------|-------------|------|------------|--------|
+| Rank | Idea Name | Tier | Score | Fit | Demand | Durability | Eco | Type | Moat |
+|------|-----------|------|-------|-----|--------|------------|-----|------|------|
 """
 
     for idea in shortlist:
@@ -1005,12 +1230,13 @@ def generate_markdown(data, output_path):
         tier = idea.get('tier', 'WATCH')
         composite = idea.get('composite_score', 0)
         profile_fit = idea.get('profile_fit', 0)
-        opportunity = idea.get('opportunity_signal', 0)
+        demand = idea.get('market_demand', idea.get('opportunity_signal', 0))
+        durability = idea.get('competitive_durability', 0)
+        eco = idea.get('ecosystem_score', 0)
         opp_type = idea.get('opportunity_type', 'Unknown')
-        build_time = idea.get('estimated_build_time', 'N/A')
-        window = idea.get('arbitrage_window', 'N/A')
+        moat_type = idea.get('moat_type', 'N/A')
 
-        md += f"| {rank} | {name} | {tier} | {composite} | {profile_fit} | {opportunity} | {opp_type} | {build_time} | {window} |\n"
+        md += f"| {rank} | {name} | {tier} | {composite} | {profile_fit} | {demand} | {durability} | {eco} | {opp_type} | {moat_type.replace('_', ' ').title()} |\n"
 
     md += "\n---\n\n## Detailed Analysis\n\n"
 
@@ -1022,8 +1248,18 @@ def generate_markdown(data, output_path):
         composite = idea.get('composite_score', 0)
         profile_fit = idea.get('profile_fit', 0)
         opportunity = idea.get('opportunity_signal', 0)
+        demand = idea.get('market_demand', idea.get('opportunity_signal', 0))
+        durability = idea.get('competitive_durability', 0)
+        eco = idea.get('ecosystem_score', 0)
+        eco_note = idea.get('ecosystem_note', '')
+        moat_type = idea.get('moat_type', 'N/A')
+        build_estimate = idea.get('build_estimate', {})
         opp_type = idea.get('opportunity_type', 'Unknown')
-        build_time = idea.get('estimated_build_time', 'N/A')
+        build_time = build_estimate.get('mvp', idea.get('estimated_build_time', 'N/A'))
+        build_beta = build_estimate.get('beta', 'N/A')
+        build_prod = build_estimate.get('production', 'N/A')
+        maintenance_profile = build_estimate.get('maintenance_profile', 'N/A')
+        competitors = idea.get('competitors', [])
         window = idea.get('arbitrage_window', 'N/A')
         evidence = idea.get('key_evidence', '')
         ai_advantage = idea.get('ai_advantage', '')
@@ -1040,10 +1276,20 @@ def generate_markdown(data, output_path):
 - Composite Score: {composite}
 - Profile Fit: {profile_fit}
 - Opportunity Signal: {opportunity}
+- Market Demand: {demand}
+- Competitive Durability: {durability}
+- Ecosystem Score: {eco}"""
+
+        if eco_note:
+            md += f" -- {eco_note}"
+
+        md += f"""
+- Moat Type: {moat_type.replace('_', ' ').title()}
 
 **Details:**
 - Opportunity Type: {opp_type}
-- Estimated Build Time: {build_time}
+- Build Estimate: MVP {build_time} / Beta {build_beta} / Prod {build_prod}
+- Maintenance: {maintenance_profile}
 - Arbitrage Window: {window}
 """
 
@@ -1063,6 +1309,21 @@ def generate_markdown(data, output_path):
 {ai_advantage}
 
 """
+
+        if competitors:
+            md += """**Competitors:**
+
+| Competitor | Relevance | Strength | Key Weakness |
+|------------|-----------|----------|--------------|
+"""
+            for comp in competitors:
+                c_name = comp.get('name', 'Unknown')
+                c_rel = comp.get('relevance', 'N/A')
+                c_str = comp.get('strength', 'N/A')
+                c_weak = comp.get('key_weakness', 'N/A')
+                md += f"| {c_name} | {c_rel} | {c_str} | {c_weak} |\n"
+
+            md += "\n"
 
         if modes:
             md += f"**Discovery Modes:** {', '.join(modes)}\n\n"
@@ -1089,6 +1350,47 @@ def generate_markdown(data, output_path):
 
         if themes.get('strongest_arbitrage'):
             md += f"**Strongest Arbitrage Opportunity:**  \n{themes['strongest_arbitrage']}\n\n"
+
+    # Consolidation groups
+    if consolidation_groups:
+        md += "## Consolidation Opportunities\n\n"
+
+        for group in consolidation_groups:
+            g_name = group.get('group_name', 'Unnamed Group')
+            g_ideas = group.get('ideas', [])
+            g_overlap = group.get('overlapping_capabilities', '')
+            g_eco_note = group.get('ecosystem_note', '')
+            idea_ranks = ', '.join([f'#{r}' for r in g_ideas])
+
+            md += f"### {g_name}\n\n"
+            md += f"- **Ideas:** {idea_ranks}\n"
+            md += f"- **Overlapping:** {g_overlap}\n"
+
+            if g_eco_note:
+                md += f"- **Ecosystem Note:** {g_eco_note}\n"
+
+            md += "\n"
+
+    # Coverage section
+    if coverage:
+        categories_scanned = coverage.get('categories_scanned', 0)
+        blind_spots = coverage.get('blind_spots', 'None identified')
+        zero_results = coverage.get('categories_with_zero_results', [])
+        zero_str = ', '.join(zero_results) if zero_results else 'None'
+        no_signal = coverage.get('source_types_with_no_signal', [])
+        no_signal_str = ', '.join(no_signal) if no_signal else 'None'
+        comparable = coverage.get('comparable_ecosystems_checked', [])
+        comparable_str = ', '.join(comparable) if comparable else 'None'
+        unmatched = coverage.get('unmatched_comparable_categories', [])
+        unmatched_str = ', '.join(unmatched) if unmatched else 'None'
+
+        md += "## Coverage Notes\n\n"
+        md += f"- **Categories scanned:** {categories_scanned}\n"
+        md += f"- **Blind spots:** {blind_spots}\n"
+        md += f"- **Categories with zero results:** {zero_str}\n"
+        md += f"- **Source types with no signal:** {no_signal_str}\n"
+        md += f"- **Comparable ecosystems checked:** {comparable_str}\n"
+        md += f"- **Unmatched comparable categories:** {unmatched_str}\n\n"
 
     md += f"""---
 

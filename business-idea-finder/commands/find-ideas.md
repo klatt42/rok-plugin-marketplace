@@ -10,6 +10,7 @@ Discover micro-SaaS and AI tool business ideas through pain point mining, gap an
 /business-idea-finder:find-ideas --mode=arbitrage                          # Single mode, broad scan
 /business-idea-finder:find-ideas --mode=pain-points --depth=scan           # Quick single-mode scan
 /business-idea-finder:find-ideas scheduling tools for home services --depth=deep-scan
+/business-idea-finder:find-ideas FBM seller tools --sources=ecommerce-reseller          # With niche source pack
 ```
 
 ## Arguments
@@ -17,6 +18,7 @@ Discover micro-SaaS and AI tool business ideas through pain point mining, gap an
 - **topic** (optional): Seed topic to focus the search. Without a topic, agents scan broadly within profile constraints.
 - **--mode** (optional): `pain-points`, `gaps`, `arbitrage`, or `all` (default: `all`). For `--depth=scan`, must specify a single mode.
 - **--depth** (optional): `scan` (5-10 min), `explore` (20-40 min, default), `deep-scan` (45-60 min).
+- **--sources** (optional): `default`, `ecommerce-reseller`, `home-services`, or `saas-builder` (default: `default`). Activates a niche-specific source pack that adds extra subreddits, review sites, and community sources to the standard research sources. See `references/source-map.md` for pack contents.
 
 Initial request: $ARGUMENTS
 
@@ -36,7 +38,7 @@ This plugin is hardcoded for this operator. All discoveries are filtered through
 
 ### Phase 1: Scope & Discovery Brief
 
-1. **Parse input**: Extract topic (optional), `--mode` flag, `--depth` flag from $ARGUMENTS. Defaults: mode=all, depth=explore.
+1. **Parse input**: Extract topic (optional), `--mode` flag, `--depth` flag, `--sources` flag from $ARGUMENTS. Defaults: mode=all, depth=explore, sources=default.
 
 2. **Validate**: If `--depth=scan` and `--mode=all`, reject with message: "Scan depth requires a single mode. Use `--mode=pain-points`, `--mode=gaps`, or `--mode=arbitrage`."
 
@@ -52,6 +54,7 @@ DISCOVERY BRIEF
 Topic: [user's topic or "Broad scan — no topic constraint"]
 Mode(s): [pain-points, gaps, arbitrage]
 Depth: [scan | explore | deep-scan]
+Source Pack: [default | ecommerce-reseller | home-services | saas-builder]
 Estimated time: [5-10 min | 20-40 min | 45-60 min]
 Target shortlist: [5-8 | 10 | 15+ ideas]
 
@@ -90,6 +93,7 @@ If `--mode` is set to a single mode, launch ONLY that mode's agent (still use ag
 1. The agent's full instructions (read from `agents/[agent-name].md` relative to this command)
 2. The topic (if provided) or "Broad scan — explore freely within profile constraints"
 3. Search count guidance: "Perform 8-12 WebSearch queries."
+4. If `--sources` is not `default`, include the source pack contents from `references/source-map.md` and instruct the agent to APPEND those sources to its standard research sources
 
 #### Deep-Scan Mode (depth=deep-scan)
 Same as explore but:
@@ -123,11 +127,11 @@ Pass ALL 3 primary agent outputs to the cross-pollinator agent along with its in
 
 ### Shortlist
 
-| # | Idea | Tier | Score | Fit | Signal | Type | Window | TAM | Defensibility |
-|---|------|------|-------|-----|--------|------|--------|-----|---------------|
-| 1 | [Name] | HOT | 85 | 88 | 80 | SaaS | 6-12mo | $30-100M | medium |
-| 2 | [Name] | HOT | 82 | 85 | 77 | Extension | 3-6mo | $10-30M | low |
-| 3 | [Name] | WARM | 71 | 75 | 65 | SaaS | 12-18mo | $100M+ | high |
+| # | Idea | Tier | Score | Fit | Demand | Durability | Eco | Type | Moat |
+|---|------|------|-------|-----|--------|------------|-----|------|------|
+| 1 | [Name] | HOT | 85 | 88 | 82 | 78 | 65 | SaaS | data_network |
+| 2 | [Name] | HOT | 82 | 85 | 80 | 74 | 45 | Extension | switching |
+| 3 | [Name] | WARM | 71 | 75 | 68 | 62 | 70 | SaaS | integration |
 | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... |
 
 ### Top 3 Detail
@@ -136,17 +140,20 @@ Pass ALL 3 primary agent outputs to the cross-pollinator agent along with its in
 > [One-liner pitch]
 - Evidence: [Key evidence summary]
 - AI advantage: [Why AI matters here]
-- Build time: [2-4 weeks]
+- Build: MVP [2-4 wk] / Beta [6-10 wk] / Prod [12-20 wk] | Maintenance: [medium]
+- Moat: [data_network_effects] | Durability: [78]
+- Ecosystem: [65] — [1-line ecosystem note]
+- Competitors: [Vendoo (direct, no AI) | QuickList (partial, single-item)]
 - Discovered via: [pain-points, arbitrage]
 - **Analyze**: `/business-idea-analyzer:analyze-idea [ready-to-paste prompt]`
 
 **#2: [Idea Name]** (HOT - 82)
 > [One-liner pitch]
-...
+_(same detail format)_
 
 **#3: [Idea Name]** (WARM - 71)
 > [One-liner pitch]
-...
+_(same detail format)_
 
 ### Profile-Filtered Out (Still Worth Knowing)
 
@@ -160,10 +167,26 @@ partnering on, outsourcing, or reconsidering if constraints change.
 
 _(If no high-opportunity/low-fit ideas were found, this section is omitted.)_
 
+### Consolidation Opportunities
+
+_(Group ideas that share >50% of core functionality or serve the same workflow)_
+
+| Group | Ideas | Overlapping Capabilities |
+|-------|-------|-------------------------|
+| [Group Name] | #2, #3 | [buyer tracking, AI responses, lead scoring] |
+| [Group Name] | #5, #6, #8 | [listing data, pricing, relisting] |
+
+_(If no consolidation groups exist, omit this section.)_
+
 ### Themes
 - **Dominant**: [Pattern across top ideas]
 - **Emerging niche**: [Specific niche that appeared multiple times]
 - **Hottest arbitrage**: [Most time-sensitive opportunity]
+
+### Coverage Notes
+- **Categories with zero results**: [list or "none"]
+- **Comparable ecosystems checked**: [list]
+- **Blind spots**: [1-2 sentence disclosure of what may have been missed]
 
 ### Next Steps
 - Pick 1-3 ideas and run `/business-idea-analyzer:analyze-idea [idea]` for deep evaluation

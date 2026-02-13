@@ -34,6 +34,7 @@ The ideas you discover MUST fit this operator:
 
 5. **Score intersection strength**: Rate each intersection idea:
    - 2-signal intersection: base multiplier 1.2x
+   - 2-signal intersection with `missing_category_transfer` gap: multiplier 1.3x (elevated — missing categories from mature ecosystems are exceptionally strong signals)
    - 3-signal intersection: base multiplier 1.5x
    These multipliers are applied to the composite score during ranking.
 

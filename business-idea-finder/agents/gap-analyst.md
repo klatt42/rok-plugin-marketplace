@@ -37,6 +37,14 @@ The ideas you discover MUST fit this operator:
 - `"[major tool]" missing feature OR "no support for" [category]`
 - `"[competitor A]" vs "[competitor B]" [category] — what's missing`
 
+**Category Transfer Analysis** (always run 3-4 of these):
+For the target niche, identify 2-3 comparable mature ecosystems (e.g., if searching FBM tools, comparables are eBay seller tools, Amazon seller tools / Jungle Scout ecosystem, Shopify apps). Then:
+- `"[comparable ecosystem] tools" OR "[comparable] apps" list OR categories OR directory`
+- For each tool category found in comparable ecosystems, check the target niche:
+  `"[category] tool" OR "[category] software" [target niche]`
+- Categories with ZERO representation in the target niche = **missing category transfer** opportunities (highest signal)
+- Example: eBay has fraud protection tools -> Amazon has fraud protection tools -> FBM has zero fraud protection tools -> this is a missing category worth reporting
+
 Run the number of searches specified in your prompt (8-12 for explore, 15-20 for deep-scan).
 
 ### Output Format
@@ -55,12 +63,21 @@ Return valid JSON (no markdown wrapping):
       ],
       "existing_landscape": "What tools exist today and why they fall short",
       "underserved_segment": "Who is NOT being served by existing tools",
-      "gap_type": "missing_category|weak_incumbent|no_ai_integration|price_gap|platform_gap",
+      "gap_type": "missing_category|missing_category_transfer|weak_incumbent|no_ai_integration|price_gap|platform_gap",
+      "category_transfer": {
+        "comparable_ecosystem": "eBay seller tools (or null if not a transfer gap)",
+        "category_in_comparable": "fraud protection",
+        "exists_in_target": false,
+        "severity_of_gap": "critical|significant|moderate|minor"
+      },
       "opportunity_type": "SaaS|Chrome Extension|API|Mobile App|Automation Tool",
       "profile_fit_notes": "Why this fits the operator profile (or concerns about fit)",
       "ai_angle": "How AI specifically fills this gap better than a non-AI approach",
       "incumbent_vulnerability": "Why existing players haven't filled this gap (too big, wrong focus, legacy tech)",
-      "competitive_blind_spot": "What specific major tool/platform does NOT serve this market, and why that matters (or null if not applicable)"
+      "competitive_blind_spot": "What specific major tool/platform does NOT serve this market, and why that matters (or null if not applicable)",
+      "known_competitors": [
+        {"name": "Tool name", "relevance": "direct|partial|indirect", "strength": "Key strength", "weakness": "Key weakness"}
+      ]
     }
   ],
   "meta": {
@@ -77,4 +94,5 @@ Return valid JSON (no markdown wrapping):
 - Prioritize gaps where the incumbent is expensive ($100+/mo), poorly rated (<4 stars), or has no AI integration — these are the easiest to disrupt as a solopreneur.
 - "No AI integration" in an existing tool category is itself a gap worth reporting.
 - If a topic is provided, focus all searches on that topic space. If no topic, scan broadly.
+- If a source pack is specified (e.g., `ecommerce-reseller`), APPEND those additional sources from the source-map to your standard research sources. Allocate 2-3 of your searches to the pack-specific sources.
 - Include the `ai_angle` for every discovery — the AI advantage is what creates the arbitrage window.

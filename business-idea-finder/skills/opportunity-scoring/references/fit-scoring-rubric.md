@@ -37,12 +37,55 @@
 - Tangential (general SMB operations, marketing): 30-50
 - None (healthcare, education, fintech): 0-20
 
-### Arbitrage Window Calibration
+### Arbitrage Window Calibration (for Market Demand — recency signal)
 - "Just became possible this month" (new API release): 90-100
 - "Possible for <6 months": 70-85
 - "Possible for 6-12 months but no one's built it": 50-70
 - "Possible for >1 year, competitors emerging": 20-40
 - "Has existed for years, market saturated": 0-15
+
+### Time to Commoditization Calibration (for Competitive Durability — inverse of window)
+- "2+ years before replication" (data moat, network effects): 90-100
+- "12-18 months" (domain expertise + integration lock-in): 70-85
+- "6-12 months" (moderate switching costs): 50-70
+- "3-6 months" (speed-only advantage, competitors closing in): 20-40
+- "Already commoditized" (multiple competitors, no moat): 0-15
+
+### Moat Type Examples
+- **Data network effects**: Buyer reputation platform — each user's reviews make the platform more valuable. Score: 90-100.
+- **Switching costs**: CRM with years of customer data — switching loses history. Score: 70-85.
+- **Integration lock-in**: Tool deeply embedded in seller workflow, connects to 5+ other tools. Score: 75-90.
+- **Community**: Crowdsourced pricing data — users contribute, creating shared value. Score: 60-80.
+- **Speed-only**: First mover with no proprietary data or network. Score: 10-25.
+- **None**: API wrapper, no data retention, trivially replaceable. Score: 0-10.
+
+## Build Estimate Tiers
+
+### Tier Definitions
+- **MVP** (2-4 weeks): Proof of concept. Core feature only, no auth/billing, basic UI. Enough to validate demand.
+- **Beta** (6-10 weeks): Feature-complete beta. Auth, basic billing, reasonable UI, initial user testing. Not production-hardened.
+- **Production** (12-20 weeks): Production-grade. Full billing integration, error handling, monitoring, docs, Chrome Web Store review (if extension), proper QA.
+
+### Hidden Complexity Flags
+| Flag | What It Means | Impact |
+|------|--------------|--------|
+| `chrome_extension_review` | Chrome Web Store review process (2-4 weeks, may require revisions) | Adds 2-6 weeks to beta/production timelines |
+| `platform_scraping` | Relies on scraping a platform's DOM/pages | High maintenance — DOM changes break the tool |
+| `anti_bot_risk` | Platform actively blocks automated access | May require constant workarounds, legal risk |
+| `ai_prompt_engineering` | Core value depends on prompt quality/tuning | Iterative tuning adds 1-2 weeks per prompt chain |
+| `model_costs` | AI inference costs affect unit economics | Must validate cost-per-user before scaling |
+| `dom_dependency` | Chrome extension touches third-party DOM | Breaks when target site updates, ongoing maintenance |
+| `auth_billing_integration` | Requires user auth + payment processing | Adds 2-4 weeks minimum for Stripe/auth setup |
+
+### Maintenance Profile
+- **low**: Standalone SaaS, no external dependencies. Quarterly updates sufficient.
+- **medium**: API-dependent, moderate external integrations. Monthly checks needed.
+- **high**: DOM-scraping Chrome extension or platform-dependent tool. Weekly monitoring, frequent patches.
+
+### Examples
+- "AI listing description generator (SaaS)": MVP 1-2wk, Beta 4-6wk, Production 8-12wk. Hidden: `ai_prompt_engineering`. Maintenance: low.
+- "Chrome extension for Facebook Marketplace CRM": MVP 2-4wk, Beta 8-12wk, Production 16-24wk. Hidden: `chrome_extension_review`, `dom_dependency`, `auth_billing_integration`. Maintenance: high.
+- "Price comparison API service": MVP 2-3wk, Beta 6-8wk, Production 10-14wk. Hidden: `platform_scraping`, `anti_bot_risk`. Maintenance: medium.
 
 ## Pain Severity Scoring
 
@@ -85,6 +128,20 @@
 ### Low Defensibility
 - "Chrome extension wrapping a public API" — No proprietary data, minimal switching costs. Platform (Chrome) could add the feature natively.
 - "Simple automation connecting two SaaS tools" — Zapier/Make could add this as a template. Speed-to-market is the only advantage.
+
+## Ecosystem Score Examples
+
+### High Ecosystem Value (80-100)
+- "CRM for marketplace sellers" — Generates buyer interaction data that feeds analytics, pricing, and fraud detection tools. Natural wedge product that drives adoption of an entire seller toolkit. Score: 90.
+- "Analytics dashboard for seller performance" — Consumes data from listing tools, pricing tools, and messaging tools. Becomes the hub of a seller's daily workflow. Score: 85.
+
+### Medium Ecosystem Value (40-79)
+- "Profit calculator for resellers" — Generates cost/margin data useful for pricing tools, but limited cross-tool value beyond that. Score: 55.
+- "AI pricing intelligence tool" — Feeds into listing tools and analytics, moderate data generation value. Score: 65.
+
+### Low Ecosystem Value (0-39)
+- "AI Agent Orchestrator for workflow automation" — Generic standalone tool, doesn't generate niche-specific data, no natural adjacency to other seller tools. Score: 15.
+- "One-click relisting tool" — Solves a narrow task, minimal data generation, low integration surface area. Score: 25.
 
 ## Network Potential Classification Examples
 
