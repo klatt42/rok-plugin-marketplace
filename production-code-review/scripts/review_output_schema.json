@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["dimension", "score", "issues", "summary"],
+  "required": ["dimension", "score", "issues", "summary", "positive_findings", "files_reviewed"],
+  "additionalProperties": false,
   "properties": {
     "dimension": {
       "type": "string",
@@ -16,7 +17,8 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "severity", "confidence", "title", "description", "files", "recommendation"],
+        "required": ["id", "severity", "confidence", "title", "description", "files", "recommendation", "category"],
+        "additionalProperties": false,
         "properties": {
           "id": { "type": "string" },
           "severity": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"] },
@@ -27,7 +29,8 @@
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["path"],
+              "required": ["path", "line"],
+              "additionalProperties": false,
               "properties": {
                 "path": { "type": "string" },
                 "line": { "type": "integer" }

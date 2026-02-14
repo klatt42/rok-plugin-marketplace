@@ -16,6 +16,18 @@ Ingest a document into the intelligence briefing system. Extracts claims, predic
 - **--skip-validation** - Skip Phase 4 (external claim validation)
 - **--skip-briefing** - Skip Phase 6 (master briefing update)
 
+### Output Folders
+All exported files are written to subfolders of:
+```
+/mnt/c/Users/RonKlatt_3qsjg34/Desktop/PlugIn-Intel-Outputs/
+```
+- `briefings/` - Master briefing exports (MD, HTML)
+- `documents/` - Per-document analysis summaries
+- `claims/` - Claim extraction exports
+- `predictions/` - Prediction tracking exports
+
+This is the single source of truth for all intel plugin outputs. Never export to Desktop root or /tmp.
+
 Initial request: $ARGUMENTS
 
 ## Execution Steps
@@ -265,6 +277,62 @@ Store all extracted data using curl to the Supabase REST API.
    ```
    For each alert, check if any claim text or topic matches the alert keywords. If matches found, display alert notifications and update the alert's `match_count` and `last_matched`.
 
+6. **Link to watched creator** (if applicable):
+   - Check if the document author matches a watched creator by name. Write a Python script to `/tmp/intel_link_creator.py`:
+   ```python
+   import json, os, subprocess, sys, urllib.parse
+
+   author = sys.argv[1]
+   doc_id = sys.argv[2]
+   url = os.environ.get('ROK_SUPABASE_URL', '')
+   key = os.environ.get('ROK_SUPABASE_KEY', '')
+
+   # Search for matching creator
+   encoded = urllib.parse.quote(f'%{author}%')
+   cmd = [
+       'curl', '-s',
+       f'{url}/rest/v1/rok_intel_creators?name=ilike.{encoded}&active=eq.true&select=id,name,documents_ingested',
+       '-H', f'apikey: {key}',
+       '-H', f'Authorization: Bearer {key}'
+   ]
+   result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+   creators = json.loads(result.stdout) if result.stdout else []
+
+   if isinstance(creators, list) and len(creators) > 0:
+       creator = creators[0]
+       creator_id = creator['id']
+       new_count = (creator.get('documents_ingested', 0) or 0) + 1
+
+       # Link document to creator
+       cmd2 = [
+           'curl', '-s', '-X', 'PATCH',
+           f'{url}/rest/v1/rok_intel_documents?id=eq.{doc_id}',
+           '-H', f'apikey: {key}',
+           '-H', f'Authorization: Bearer {key}',
+           '-H', 'Content-Type: application/json',
+           '-d', json.dumps({"creator_id": creator_id})
+       ]
+       subprocess.run(cmd2, capture_output=True, text=True, timeout=15)
+
+       # Update creator stats
+       cmd3 = [
+           'curl', '-s', '-X', 'PATCH',
+           f'{url}/rest/v1/rok_intel_creators?id=eq.{creator_id}',
+           '-H', f'apikey: {key}',
+           '-H', f'Authorization: Bearer {key}',
+           '-H', 'Content-Type: application/json',
+           '-d', json.dumps({"documents_ingested": new_count, "last_ingested": "now()"})
+       ]
+       subprocess.run(cmd3, capture_output=True, text=True, timeout=15)
+
+       print(f"LINKED:{creator['name']}:{new_count}")
+   else:
+       print("NO_MATCH")
+   ```
+   Execute: `python3 /tmp/intel_link_creator.py "[author]" "[doc_uuid]"`
+   - If match found: document linked to creator, creator stats updated
+   - If no match: no action (author is not on watch list)
+
 Display:
 ```
 STORAGE COMPLETE
@@ -272,6 +340,7 @@ Document ID: [uuid]
 Claims Stored: [N]
 Predictions Stored: [N]
 Source Updated: [author] (Trust: [tier], Documents: [count])
+Creator: [creator name] (linked, [n] docs) | [author] (not on watch list)
 Alert Matches: [N] (if any, list alert topics)
 ```
 
@@ -289,9 +358,18 @@ If `--skip-briefing` is present in $ARGUMENTS, skip to Phase 7.
    - Display briefing summary
 3. If user says no, note "Master briefing update skipped" and proceed
 
-### Phase 7: Report
+### Phase 7: Export and Report
 
-Display the final ingestion summary:
+1. **Auto-export per-document summary** to `PlugIn-Intel-Outputs/documents/`:
+   - Write a markdown summary of the document analysis to `[YYYY-MM-DD]_[sanitized_title].md`
+   - Include: metadata, claims extracted, predictions, validation results
+   - For batch mode, export each document individually
+
+2. **If master briefing was updated**, auto-export briefing files to `PlugIn-Intel-Outputs/briefings/`:
+   - `Intel_Briefing_v[N]_[YYYY-MM-DD].md`
+   - `Intel_Briefing_v[N]_[YYYY-MM-DD].html`
+
+3. Display the final ingestion summary:
 
 ```
 =========================================
@@ -299,6 +377,7 @@ INGESTION COMPLETE
 =========================================
 Document: [title]
 Source: [source_type] | Author: [author] | Trust: [tier]
+Creator: [creator name] (linked) | Not on watch list
 Classification: [classification]
 
 Claims Extracted: [N]

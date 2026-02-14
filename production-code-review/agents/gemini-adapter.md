@@ -21,10 +21,9 @@ For each review dimension, construct and run:
 timeout 300 gemini \
   -p "{review_prompt}" \
   -m "gemini-2.5-pro" \
-  -o json \
-  --approval-mode plan \
+  --approval-mode yolo \
   --include-directories {project_path} \
-  > /tmp/gemini_review_{dimension}.json 2>/dev/null
+  > /tmp/gemini_review_{dimension}.txt 2>/tmp/gemini_review_{dimension}.err
 ```
 
 ### Flags Explained
@@ -33,9 +32,14 @@ timeout 300 gemini \
 |------|---------|
 | `-p "{prompt}"` | Non-interactive (headless) mode with the given prompt |
 | `-m "gemini-2.5-pro"` | Model selection |
-| `-o json` | Structured JSON output format |
-| `--approval-mode plan` | Read-only mode -- analyzes but does not modify files |
+| `--approval-mode yolo` | Auto-approve all tool calls (read-only by prompt instruction). NOTE: `plan` mode requires `experimental.plan` in settings -- use `yolo` for compatibility |
 | `--include-directories` | Additional directories to include in workspace |
+
+### Important Notes
+
+- Do NOT use `-o json` -- it wraps the entire session in metadata JSON (stats, tool calls), NOT the model's response. Instead, capture text output and extract JSON from it.
+- Do NOT use `2>/dev/null` -- capture stderr to `/tmp/gemini_review_{dimension}.err` for debugging failures.
+- The `--approval-mode plan` flag requires `experimental.plan` to be enabled in `~/.gemini/settings.json`. Use `yolo` instead, which works without experimental flags. The prompt already instructs Gemini not to modify files.
 
 ## Prompt Construction
 
@@ -89,14 +93,14 @@ Begin your review now.
 
 ## Output Parsing
 
-Gemini with `-o json` outputs structured JSON with metadata wrapping. Parse strategy:
+Gemini outputs text that contains the model's response (which should be JSON per the prompt). Parse strategy:
 
-1. Read file content with `Read` tool
-2. Try parsing as JSON directly -- may be the raw model response
-3. If the JSON has a `response` or `text` or `content` field, extract and parse that as the review JSON
-4. If the outer JSON has a `candidates` array (Gemini API format), extract `candidates[0].content.parts[0].text` and parse
-5. If content contains a JSON code block, extract and parse inner content
-6. If content is plain text containing a `{...}` object, regex-extract
+1. Read file content from `/tmp/gemini_review_{dimension}.txt` with `Read` tool
+2. Strip any ANSI escape codes and Gemini CLI status lines (lines starting with "Loaded cached", "Session cleanup", "Hook registry", "YOLO mode")
+3. If remaining content is valid JSON, use it directly
+4. If content contains a JSON code block (```json ... ```), extract and parse inner content
+5. If content is plain text containing a `{...}` object, regex-extract the outermost JSON object
+6. If parsing fails, check `/tmp/gemini_review_{dimension}.err` for error details
 7. Fallback: return default score-50 result
 
 ```json
@@ -118,23 +122,32 @@ Gemini with `-o json` outputs structured JSON with metadata wrapping. Parse stra
 
 ## Error Handling
 
+On failure, ALWAYS read the `.err` file first for diagnostics:
+
 | Error | Detection | Response |
 |-------|-----------|----------|
 | Not installed | `which gemini` returns empty | Skip Gemini, warn user |
 | Auth failure | stderr contains "auth" or "credentials" | Warn: "Run `gemini auth login` to authenticate" |
+| Plan mode error | stderr contains "experimental.plan" | Already fixed: adapter uses `yolo` mode instead |
 | Model unavailable | stderr contains "model" error | Try fallback `-m gemini-2.5-flash` |
-| Rate limited | stderr contains "quota" or "429" | Wait 10s, retry once, then skip |
-| Non-zero exit | Exit code != 0 | Log error, use fallback score 50 |
+| Rate limited | stderr contains "quota" or "429" or "exhausted your capacity" | Wait 10s, retry once, then skip |
+| Non-zero exit | Exit code != 0 | Read .err file, log error, use fallback score 50 |
 
 ## File Cleanup
 
 After parsing all dimension results, clean up temp files:
 
 ```
-/tmp/gemini_review_code_quality.json
-/tmp/gemini_review_testing.json
-/tmp/gemini_review_ui_ux.json
-/tmp/gemini_review_responsive_design.json
-/tmp/gemini_review_security.json
-/tmp/gemini_review_performance.json
+/tmp/gemini_review_code_quality.txt
+/tmp/gemini_review_code_quality.err
+/tmp/gemini_review_testing.txt
+/tmp/gemini_review_testing.err
+/tmp/gemini_review_ui_ux.txt
+/tmp/gemini_review_ui_ux.err
+/tmp/gemini_review_responsive_design.txt
+/tmp/gemini_review_responsive_design.err
+/tmp/gemini_review_security.txt
+/tmp/gemini_review_security.err
+/tmp/gemini_review_performance.txt
+/tmp/gemini_review_performance.err
 ```

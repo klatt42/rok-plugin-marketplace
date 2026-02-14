@@ -1,6 +1,6 @@
 # /intel-briefing - Generate Master Intelligence Briefing
 
-Generate or view the cumulative intelligence master briefing, synthesizing all ingested documents into financial forecasts, geopolitical analysis, prediction tracking, and cross-domain themes.
+Generate or view the cumulative intelligence master briefing, synthesizing all ingested documents into four analytical pillars: financial outlook, geopolitical analysis, AI & technology, and labor markets, plus prediction tracking and cross-domain themes.
 
 ## Usage
 
@@ -9,14 +9,22 @@ Generate or view the cumulative intelligence master briefing, synthesizing all i
 /intel-briefing:intel-briefing refresh            # Force regeneration from all data
 /intel-briefing:intel-briefing category:financial  # Focus on financial section only
 /intel-briefing:intel-briefing category:geopolitical # Focus on geopolitical section only
+/intel-briefing:intel-briefing category:technology   # Focus on AI & technology section only
 /intel-briefing:intel-briefing category:labor        # Focus on labor section only
 /intel-briefing:intel-briefing since:2026-01-01    # Only include data since date
 ```
 
 ### Parameters
 - **refresh** - Force regeneration even if a recent briefing exists
-- **category** - Focus on a single section: `financial`, `geopolitical`, `labor`
+- **category** - Focus on a single section: `financial`, `geopolitical`, `technology`, `labor`
 - **since** - Only consider data after this date (ISO format YYYY-MM-DD)
+
+### Output Folder
+All exported files (MD, HTML) are written to:
+```
+/mnt/c/Users/RonKlatt_3qsjg34/Desktop/PlugIn-Intel-Outputs/briefings/
+```
+This folder is the single source of truth for briefing outputs. Never export to Desktop root or /tmp.
 
 Initial request: $ARGUMENTS
 
@@ -24,15 +32,25 @@ Initial request: $ARGUMENTS
 
 ### Phase 1: Check Current State
 
-1. Query the latest briefing from Supabase:
+1. **Determine version number from BOTH sources** (use whichever is higher):
+
+   a. Query the latest briefing from Supabase:
    ```bash
    curl -s "${ROK_SUPABASE_URL}/rest/v1/rok_intel_briefings?order=version.desc&limit=1&select=id,version,created_at,document_count,claim_count,prediction_count,executive_summary,full_briefing_md" \
      -H "apikey: ${ROK_SUPABASE_KEY}" \
      -H "Authorization: Bearer ${ROK_SUPABASE_KEY}"
    ```
 
+   b. Scan the output folder for existing briefing files:
+   ```bash
+   ls /mnt/c/Users/RonKlatt_3qsjg34/Desktop/PlugIn-Intel-Outputs/briefings/*intel-briefing_v*.md 2>/dev/null | sort -V | tail -1
+   ```
+   Extract the version number from the filename pattern `*_v[N].*`. The highest version from either Supabase or the output folder is the **current version**. The new briefing will be current + 1.
+
+   **IMPORTANT**: If the output folder shows a higher version than Supabase, prior briefings were generated in sessions where Supabase storage was unavailable or the DB was reset. Always respect the output folder version as authoritative.
+
 2. Parse the response:
-   - If no briefing exists, proceed to Phase 2 to generate the inaugural briefing
+   - If no briefing exists in EITHER source, proceed to Phase 2 to generate the inaugural briefing
    - If a briefing exists and `refresh` is NOT in $ARGUMENTS:
      - Check if briefing is recent (created_at within 24 hours)
      - If recent: display the `full_briefing_md` content and ask "This briefing is [X hours] old. Refresh with latest intelligence? (yes/no)"
@@ -95,7 +113,13 @@ Status: [Current / Stale / None]
      -H "Authorization: Bearer ${ROK_SUPABASE_KEY}"
    ```
 
-5. Get previous briefing sections (financial_section, geopolitical_section, labor_section) for delta detection context
+5. Get previous briefing sections (financial_section, geopolitical_section, technology_section, labor_section) for delta detection context
+
+6. **File-based fallback for previous briefing**: If Supabase has no previous briefing (or the version in Supabase is lower than the output folder), load the most recent `*_intel-briefing_v*.md` file from the output folder:
+   ```bash
+   LATEST_FILE=$(ls /mnt/c/Users/RonKlatt_3qsjg34/Desktop/PlugIn-Intel-Outputs/briefings/*intel-briefing_v*.md 2>/dev/null | sort -V | tail -1)
+   ```
+   Read this file's content and use it as the `PREVIOUS BRIEFING` context for all analyst agents and the synthesizer. This ensures cumulative context is preserved even when Supabase has been reset.
 
 Display:
 ```
@@ -109,7 +133,7 @@ Active Alerts: [N]
 
 ### Phase 3: Specialized Analysis (Parallel Dispatch)
 
-If `category:financial` is specified, skip geopolitical and labor. If `category:geopolitical` is specified, skip financial and labor. If `category:labor` is specified, skip financial and geopolitical. Otherwise dispatch all three.
+If `category:financial` is specified, only dispatch financial. If `category:geopolitical`, only geopolitical. If `category:technology`, only technology. If `category:labor`, only labor. Otherwise dispatch all four analysts in parallel.
 
 1. Group claims by category for targeted dispatch
 
@@ -151,7 +175,26 @@ If `category:financial` is specified, skip geopolitical and labor. If `category:
    )
    ```
 
-4. **Dispatch labor-analyst** agent (background):
+4. **Dispatch technology-analyst** agent (background):
+   ```
+   Task(
+     description: "Technology synthesis for master briefing",
+     prompt: "You are the technology-analyst agent. [Include agent instructions from agents/technology-analyst.md]
+
+     TECHNOLOGY CLAIMS:
+     [JSON array of all technology/ai/semiconductor/autonomous category claims]
+
+     PREVIOUS TECHNOLOGY SECTION:
+     [Previous briefing's technology section text, or 'This is the inaugural technology section']
+
+     CURRENT DATE: [today's date]
+
+     Return structured JSON per your output format.",
+     run_in_background: true
+   )
+   ```
+
+5. **Dispatch labor-analyst** agent (background):
    ```
    Task(
      description: "Labor synthesis for master briefing",
@@ -170,10 +213,11 @@ If `category:financial` is specified, skip geopolitical and labor. If `category:
    )
    ```
 
-5. Collect results from all agents via TaskOutput (block: true):
+6. Collect results from all agents via TaskOutput (block: true):
    ```
    TaskOutput(task_id: "<financial_task_id>", block: true, timeout: 120000)
    TaskOutput(task_id: "<geopolitical_task_id>", block: true, timeout: 120000)
+   TaskOutput(task_id: "<technology_task_id>", block: true, timeout: 120000)
    TaskOutput(task_id: "<labor_task_id>", block: true, timeout: 120000)
    ```
 
@@ -182,6 +226,7 @@ Display:
 SPECIALIZED ANALYSIS COMPLETE
 Financial Section: [Ready / Skipped / Error]
 Geopolitical Section: [Ready / Skipped / Error]
+Technology Section: [Ready / Skipped / Error]
 Labor Section: [Ready / Skipped / Error]
 ```
 
@@ -199,6 +244,9 @@ Labor Section: [Ready / Skipped / Error]
      GEOPOLITICAL SECTION OUTPUT:
      [JSON from geopolitical-analyst]
 
+     TECHNOLOGY SECTION OUTPUT:
+     [JSON from technology-analyst]
+
      LABOR SECTION OUTPUT:
      [JSON from labor-analyst]
 
@@ -213,11 +261,12 @@ Labor Section: [Ready / Skipped / Error]
      - Due for review: [list]
      - Recent outcomes: [list]
 
-     DOCUMENT COUNT: [total]
-     NEW SINCE LAST: [delta]
+     BRIEFING VERSION: v[N] (determined in Phase 1 from highest of Supabase or output folder + 1)
+     DOCUMENT COUNT: [total across ALL sessions, not just current]
+     NEW SINCE LAST: [delta - documents added since previous briefing]
      ACTIVE ALERT MATCHES: [list of alerts matched by new claims]
 
-     Return structured JSON per your output format, including full_briefing_md.",
+     IMPORTANT: The full_briefing_md header MUST use the correct version number, total document count, and new-since-last count. Do NOT label as 'inaugural' if previous briefing versions exist. Check the version number provided above.",
      run_in_background: false
    )
    ```
@@ -226,7 +275,7 @@ Labor Section: [Ready / Skipped / Error]
 
 ### Phase 5: Store and Display
 
-1. **Determine new version number**: Previous version + 1 (or 1 if inaugural)
+1. **Determine new version number**: Use the highest version found in Phase 1 (from Supabase OR output folder) + 1. If neither has any briefings, use version 1.
 
 2. **Store new briefing** in `rok_intel_briefings`:
    ```bash
@@ -245,7 +294,7 @@ Labor Section: [Ready / Skipped / Error]
        "financial_section": "[financial_section_md]",
        "geopolitical_section": "[geopolitical_section_md]",
        "labor_section": "[labor_section_md]",
-       "technology_section": null,
+       "technology_section": "[technology_section_md]",
        "consensus_themes": [consensus_json],
        "contested_topics": [contested_json],
        "confidence_summary": [confidence_json],
@@ -256,16 +305,20 @@ Labor Section: [Ready / Skipped / Error]
 
 3. **Display the full briefing** to the user (render the `full_briefing_md` content)
 
-4. **Offer export**:
+4. **Auto-export to output folder** (always, no prompt needed):
    ```
-   Export this briefing to HTML/PDF/MD? (yes/no)
+   Output folder: /mnt/c/Users/RonKlatt_3qsjg34/Desktop/PlugIn-Intel-Outputs/briefings/
    ```
-   If yes, trigger `/intel-briefing:intel-export briefing`
+   - Write the `full_briefing_md` to `Intel_Briefing_v[N]_[YYYY-MM-DD].md`
+   - Generate a self-contained HTML version and write to `Intel_Briefing_v[N]_[YYYY-MM-DD].html`
+   - Use a dark-themed HTML template with print-friendly CSS for PDF-via-browser
+   - Display: "Exported to PlugIn-Intel-Outputs/briefings/ (MD + HTML)"
 
 ## Important Rules
 
 - For `refresh`, always regenerate even if a recent briefing exists
 - For `category:` filter, only generate that section (skip the other analyst agents). The synthesizer still runs but with only one section populated.
+- **Cumulative context is critical**: Always load the previous briefing (from Supabase or output folder file) and pass it to ALL analyst agents and the synthesizer. Each briefing must build on prior analysis, not start fresh.
 - Incremental synthesis: for non-refresh runs, only process claims newer than the last briefing but include previous sections for context
 - If fewer than 3 total documents in the system, display a note: "Limited data -- briefing quality will improve with more sources. Currently based on [N] documents."
 - If no claims exist at all, do not generate a briefing. Instead display: "No intelligence data found. Ingest documents first: /intel-briefing:intel-ingest"

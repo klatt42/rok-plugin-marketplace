@@ -1,7 +1,7 @@
 -- ============================================================
 -- Intel Briefing Plugin - Supabase Schema
--- Version: 1.0.0
--- Tables: 8 (rok_ naming convention)
+-- Version: 1.2.0
+-- Tables: 10 (rok_ naming convention)
 -- ============================================================
 
 -- Documents: Ingested content metadata and summaries
@@ -184,6 +184,59 @@ CREATE TABLE rok_intel_theses (
 CREATE INDEX idx_intel_theses_status ON rok_intel_theses(status);
 CREATE INDEX idx_intel_theses_category ON rok_intel_theses(category);
 
+-- Creators: Watched content creators for intelligence gathering
+CREATE TABLE rok_intel_creators (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    platform TEXT NOT NULL CHECK (platform IN ('youtube','twitter','substack','blog','podcast','research')),
+    channel_url TEXT,
+    handle TEXT,
+    domain_expertise TEXT[] DEFAULT '{}',
+    trust_tier TEXT DEFAULT 'STANDARD' CHECK (trust_tier IN ('HIGH','MEDIUM','STANDARD','LOW')),
+    documents_ingested INTEGER DEFAULT 0,
+    last_checked TIMESTAMPTZ,
+    last_ingested TIMESTAMPTZ,
+    active BOOLEAN DEFAULT TRUE,
+    notes TEXT,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_intel_creators_active ON rok_intel_creators(active);
+CREATE INDEX idx_intel_creators_platform ON rok_intel_creators(platform);
+CREATE INDEX idx_intel_creators_trust ON rok_intel_creators(trust_tier);
+CREATE INDEX idx_intel_creators_expertise ON rok_intel_creators USING GIN(domain_expertise);
+
+-- Scout Recommendations: Discovered content pending review
+CREATE TABLE rok_intel_scout_recommendations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    creator_id UUID REFERENCES rok_intel_creators(id) ON DELETE SET NULL,
+    creator_name TEXT NOT NULL,
+    platform TEXT NOT NULL,
+    content_url TEXT NOT NULL UNIQUE,
+    publish_date DATE,
+    discovered_at TIMESTAMPTZ DEFAULT NOW(),
+    relevance_score DECIMAL(3,2) CHECK (relevance_score BETWEEN 0 AND 1),
+    matching_pillars TEXT[] DEFAULT '{}',
+    matching_keywords TEXT[] DEFAULT '{}',
+    from_watched_creator BOOLEAN DEFAULT FALSE,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected','ingested','expired')),
+    user_notes TEXT,
+    metadata JSONB DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX idx_scout_recs_status ON rok_intel_scout_recommendations(status);
+CREATE INDEX idx_scout_recs_score ON rok_intel_scout_recommendations(relevance_score DESC);
+CREATE INDEX idx_scout_recs_creator ON rok_intel_scout_recommendations(creator_id);
+CREATE INDEX idx_scout_recs_url ON rok_intel_scout_recommendations(content_url);
+CREATE INDEX idx_scout_recs_discovered ON rok_intel_scout_recommendations(discovered_at DESC);
+
+-- Add creator_id foreign key to documents table
+ALTER TABLE rok_intel_documents ADD COLUMN creator_id UUID REFERENCES rok_intel_creators(id) ON DELETE SET NULL;
+CREATE INDEX idx_intel_documents_creator ON rok_intel_documents(creator_id);
+
 -- Enable RLS on all tables
 ALTER TABLE rok_intel_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rok_intel_claims ENABLE ROW LEVEL SECURITY;
@@ -193,6 +246,8 @@ ALTER TABLE rok_intel_prediction_accuracy ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rok_intel_sources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rok_intel_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rok_intel_theses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rok_intel_creators ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rok_intel_scout_recommendations ENABLE ROW LEVEL SECURITY;
 
 -- Service role full access policies
 CREATE POLICY "Service role full access" ON rok_intel_documents FOR ALL USING (true) WITH CHECK (true);
@@ -203,3 +258,5 @@ CREATE POLICY "Service role full access" ON rok_intel_prediction_accuracy FOR AL
 CREATE POLICY "Service role full access" ON rok_intel_sources FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Service role full access" ON rok_intel_alerts FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Service role full access" ON rok_intel_theses FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON rok_intel_creators FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON rok_intel_scout_recommendations FOR ALL USING (true) WITH CHECK (true);
