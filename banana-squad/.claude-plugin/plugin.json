@@ -1,0 +1,8 @@
+{
+  "name": "banana-squad",
+  "version": "1.0.0",
+  "description": "Multi-agent professional image generation using Gemini 3 Pro Image API. Implements PaperBanana research pipeline: Research -> Prompt Architect -> Generator -> Critic. Generates 5 image variants with 4-dimension critique scoring.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

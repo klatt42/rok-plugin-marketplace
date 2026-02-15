@@ -104,6 +104,16 @@
       "name": "plugin-idea-generator",
       "source": "./plugin-idea-generator",
       "description": "Generate novel Claude Code plugin ideas personalized to your skills, existing plugin portfolio, project history, and current AI trends. Each idea includes marketization pathway scoring for transitioning from personal tool to sellable product (SaaS, Chrome extension, API). Portfolio-aware with triple scoring: Personal Utility, Marketization Potential, and Novelty."
+    },
+    {
+      "name": "tactical-integrated-targeting",
+      "source": "./tactical-integrated-targeting",
+      "description": "Fire support training simulation for Marine Fire Support Officers (FSOs). Ingest tactical scenarios with maps, images, and enemy positions. Analyze targets using publicly available weapons data from USMC, Army, Air Force, and Navy arsenals. Generate sequenced fire mission plans with call-for-fire format, synchronization matrices, and combined arms integration. Multi-agent architecture with surface fire, air support, naval fire, and combined arms specialist agents. TRAINING USE ONLY."
+    },
+    {
+      "name": "banana-squad",
+      "source": "./banana-squad",
+      "description": "Multi-agent professional image generation using Gemini 3 Pro Image API. Implements PaperBanana research pipeline: Research -> Prompt Architect -> Generator -> Critic. Generates 5 image variants with 4-dimension critique scoring (Faithfulness, Conciseness, Readability, Aesthetics)."
     }
   ]
 }
