@@ -1,0 +1,8 @@
+{
+  "name": "medigap-selector",
+  "version": "1.0.0",
+  "description": "Interview-driven Medigap plan selector for Maryland and Pennsylvania. Compares Plan G vs Plan N using real premium data, state-specific switching rules, medical usage patterns, and Part B excess charge risk. Dispatches 3 parallel research agents to gather current quotes, insurer ratings, and regulatory context, then synthesizes a personalized recommendation.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

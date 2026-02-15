@@ -114,6 +114,11 @@
       "name": "banana-squad",
       "source": "./banana-squad",
       "description": "Multi-agent professional image generation using Gemini 3 Pro Image API. Implements PaperBanana research pipeline: Research -> Prompt Architect -> Generator -> Critic. Generates 5 image variants with 4-dimension critique scoring (Faithfulness, Conciseness, Readability, Aesthetics)."
+    },
+    {
+      "name": "medigap-selector",
+      "source": "./medigap-selector",
+      "description": "Interview-driven Medigap plan selector for Maryland and Pennsylvania. Compares Plan G vs Plan N using real premium data, state-specific switching rules, medical usage patterns, and Part B excess charge risk. Dispatches 3 parallel research agents to gather current quotes, insurer ratings, and regulatory context, then synthesizes a personalized recommendation."
     }
   ]
 }
