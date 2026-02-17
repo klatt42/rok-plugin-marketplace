@@ -1,0 +1,8 @@
+{
+  "name": "directory-creator",
+  "version": "1.0.0",
+  "description": "Automate niche business directory creation through an interview-driven workflow: gather requirements, search for businesses via WebSearch, optionally enrich data from websites, verify/deduplicate, score quality, and export to CSV/Excel/PDF/HTML. Output imports directly into DirectoryGenius or stands alone.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}
