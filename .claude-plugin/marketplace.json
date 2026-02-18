@@ -129,6 +129,26 @@
       "name": "playground",
       "source": "./playground",
       "description": "Creates interactive HTML playgrounds — self-contained single-file explorers with visual controls, live preview, and prompt output with copy button. Templates: design-playground, data-explorer, concept-map, document-critique."
+    },
+    {
+      "name": "claude-md-management",
+      "source": "./claude-md-management",
+      "description": "Tools to maintain and improve CLAUDE.md files - audit quality, capture session learnings, and keep project memory current."
+    },
+    {
+      "name": "pr-review-toolkit",
+      "source": "./pr-review-toolkit",
+      "description": "Comprehensive PR review agents specializing in comments, tests, error handling, type design, code quality, and code simplification."
+    },
+    {
+      "name": "claude-code-setup",
+      "source": "./claude-code-setup",
+      "description": "Analyze codebases and recommend tailored Claude Code automations such as hooks, skills, MCP servers, and subagents."
+    },
+    {
+      "name": "explanatory-output-style",
+      "source": "./explanatory-output-style",
+      "description": "Adds educational insights about implementation choices and codebase patterns (mimics the deprecated Explanatory output style)."
     }
   ]
 }
