@@ -124,6 +124,11 @@
       "name": "directory-creator",
       "source": "./directory-creator",
       "description": "Automate niche business directory creation through an interview-driven workflow. Gather requirements, search for businesses via WebSearch, enrich data from websites, verify and deduplicate, score quality, and export to CSV/Excel/PDF/HTML. Output imports directly into DirectoryGenius or stands alone."
+    },
+    {
+      "name": "playground",
+      "source": "./playground",
+      "description": "Creates interactive HTML playgrounds — self-contained single-file explorers with visual controls, live preview, and prompt output with copy button. Templates: design-playground, data-explorer, concept-map, document-critique."
     }
   ]
 }
