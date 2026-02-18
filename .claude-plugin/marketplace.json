@@ -149,6 +149,11 @@
       "name": "explanatory-output-style",
       "source": "./explanatory-output-style",
       "description": "Adds educational insights about implementation choices and codebase patterns (mimics the deprecated Explanatory output style)."
+    },
+    {
+      "name": "code-simplifier",
+      "source": "./code-simplifier",
+      "description": "Agent that simplifies and refines code for clarity, consistency, and maintainability while preserving functionality."
     }
   ]
 }
