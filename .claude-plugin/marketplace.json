@@ -154,6 +154,16 @@
       "name": "code-simplifier",
       "source": "./code-simplifier",
       "description": "Agent that simplifies and refines code for clarity, consistency, and maintainability while preserving functionality."
+    },
+    {
+      "name": "ralph-loop",
+      "source": "./ralph-loop",
+      "description": "Continuous self-referential AI loops for interactive iterative development, implementing the Ralph Wiggum technique. Run Claude in a while-true loop with the same prompt until task completion."
+    },
+    {
+      "name": "learning-output-style",
+      "source": "./learning-output-style",
+      "description": "Interactive learning mode that requests meaningful code contributions at decision points (mimics the unshipped Learning output style)."
     }
   ]
 }
