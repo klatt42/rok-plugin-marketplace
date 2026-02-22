@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Intelligence Report #2 - LinkedIn Strategy Deep Dive</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --card-border: #2a2d3a;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --accent: #818cf8;
+      --accent-dim: rgba(129,140,248,0.15);
+      --green: #34d399;
+      --green-dim: rgba(52,211,153,0.15);
+      --red: #f87171;
+      --red-dim: rgba(248,113,113,0.15);
+      --yellow: #fbbf24;
+      --yellow-dim: rgba(251,191,36,0.15);
+      --orange: #fb923c;
+      --orange-dim: rgba(251,146,60,0.15);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96,165,250,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .report-header { text-align: center; padding: 3rem 2rem; border-bottom: 1px solid var(--card-border); margin-bottom: 3rem; }
+    .report-header h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+    .report-header .subtitle { color: var(--text-muted); font-size: 0.95rem; }
+    .report-header .date { color: var(--accent); font-size: 0.85rem; margin-top: 0.5rem; }
+    .video-section { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 2.5rem; margin-bottom: 3rem; }
+    .video-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); }
+    .video-title { font-size: 1.5rem; font-weight: 700; max-width: 70%; }
+    .verdict-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.2rem; border-radius: 100px; font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
+    .verdict-pass { background: var(--green-dim); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+    .verdict-mixed { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+    .verdict-caution { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(251,146,60,0.3); }
+    .meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .meta-item { background: var(--bg); border-radius: 10px; padding: 1rem; }
+    .meta-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .meta-value { font-weight: 600; font-size: 0.95rem; }
+    .score-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+    .score-label { width: 120px; font-size: 0.85rem; color: var(--text-muted); flex-shrink: 0; }
+    .score-bar-bg { flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+    .score-bar { height: 100%; border-radius: 4px; }
+    .score-number { width: 45px; text-align: right; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+    .data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+    .data-table th { text-align: left; padding: 0.75rem 1rem; background: var(--bg); color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid var(--card-border); }
+    .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: top; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .pill { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
+    .pill-confirmed { background: var(--green-dim); color: var(--green); }
+    .pill-partial { background: var(--yellow-dim); color: var(--yellow); }
+    .pill-false { background: var(--red-dim); color: var(--red); }
+    .pill-unverified { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+    .section-title { font-size: 1.1rem; font-weight: 700; margin: 2rem 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title::before { content: ''; display: inline-block; width: 4px; height: 1.2em; background: var(--accent); border-radius: 2px; }
+    .key-point { background: var(--bg); border-radius: 10px; padding: 1.25rem; margin-bottom: 0.75rem; border-left: 3px solid var(--accent); }
+    .key-point h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .key-point .evidence { font-size: 0.85rem; color: var(--text-muted); font-style: italic; }
+    .key-point .pills { display: flex; gap: 0.4rem; flex-shrink: 0; }
+    .framework-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .framework-card { background: var(--bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 1.25rem; }
+    .framework-card h4 { color: var(--accent); font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .framework-card p { font-size: 0.85rem; color: var(--text-muted); }
+    .red-flag { background: var(--red-dim); border: 1px solid rgba(248,113,113,0.2); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; }
+    .red-flag-header { display: flex; justify-content: space-between; align-items: center; }
+    .red-flag h4 { color: var(--red); font-size: 0.9rem; }
+    .red-flag p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; }
+    .warning-flag { background: var(--yellow-dim); border: 1px solid rgba(251,191,36,0.2); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; }
+    .warning-flag h4 { color: var(--yellow); font-size: 0.9rem; }
+    .warning-flag p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; }
+    blockquote { border-left: 3px solid var(--accent); padding: 0.75rem 1.25rem; margin: 1rem 0; color: var(--text-muted); font-style: italic; background: var(--accent-dim); border-radius: 0 8px 8px 0; }
+    .sources-list { list-style: none; margin: 1rem 0; }
+    .sources-list li { padding: 0.4rem 0; font-size: 0.85rem; }
+    .sources-list a { color: var(--accent); text-decoration: none; }
+    .sources-list a:hover { text-decoration: underline; }
+    .conflict-box { background: var(--orange-dim); border: 1px solid rgba(251,146,60,0.2); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+    .conflict-box h3 { color: var(--orange); font-size: 1rem; margin-bottom: 1rem; }
+    .rec-section { margin: 1.5rem 0; }
+    .rec-category { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.4rem 0; margin-bottom: 0.5rem; }
+    .rec-immediate { color: var(--green); }
+    .rec-plan { color: var(--yellow); }
+    .rec-research { color: var(--blue); }
+    .rec-item { padding: 0.6rem 0 0.6rem 1.2rem; border-left: 2px solid var(--card-border); margin-bottom: 0.4rem; font-size: 0.9rem; }
+    .memory-block { background: var(--bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 1rem; margin: 0.5rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--green); overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+    @media (max-width: 768px) { body { padding: 1rem; } .video-section { padding: 1.5rem; } .video-title { max-width: 100%; font-size: 1.2rem; } .meta-grid { grid-template-columns: 1fr 1fr; } .framework-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="report-header">
+    <h1>YouTube Intelligence Report #2</h1>
+    <div class="subtitle">LinkedIn Strategy Deep Dive &mdash; Algorithm, CTA, and Monetization</div>
+    <div class="date">Generated: February 7, 2026 &mdash; For ContentPulse Integration</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- VIDEO 1: Mark Firth -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="video-section">
+    <div class="video-header">
+      <div>
+        <div class="video-title">How to BEAT the New LinkedIn Algorithm in 9 minutes</div>
+        <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Mark Firth</div>
+      </div>
+      <span class="verdict-badge verdict-mixed">MIXED &mdash; 7.3/10</span>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-item"><div class="meta-label">Published</div><div class="meta-value">2026-02-04</div></div>
+      <div class="meta-item"><div class="meta-label">Duration</div><div class="meta-value">9:04</div></div>
+      <div class="meta-item"><div class="meta-label">Type</div><div class="meta-value" style="color: var(--yellow);">Tutorial (Tactical)</div></div>
+      <div class="meta-item"><div class="meta-label">Trust</div><div class="meta-value">STANDARD</div></div>
+      <div class="meta-item"><div class="meta-label">Transcript</div><div class="meta-value">MEDIUM</div></div>
+    </div>
+
+    <div class="section-title">Scores</div>
+    <div class="score-row"><span class="score-label">Content Quality</span><div class="score-bar-bg"><div class="score-bar" style="width:73%; background: var(--yellow);"></div></div><span class="score-number" style="color: var(--yellow);">7.3</span></div>
+    <div class="score-row"><span class="score-label">Credibility</span><div class="score-bar-bg"><div class="score-bar" style="width:73%; background: var(--yellow);"></div></div><span class="score-number" style="color: var(--yellow);">7.3</span></div>
+    <div class="score-row"><span class="score-label">Actionability</span><div class="score-bar-bg"><div class="score-bar" style="width:70%; background: var(--yellow);"></div></div><span class="score-number" style="color: var(--yellow);">7.0</span></div>
+
+    <div class="section-title">Key Algorithm Change</div>
+    <div class="key-point">
+      <h4>LinkedIn shifted from follower-based to interest-based feed (like Netflix/YouTube)</h4>
+      <p class="evidence">CONFIRMED: LinkedIn deployed 360Brew AI (150B parameters) enabling topic-graph recommendations. Your content now reaches people interested in your topic, not just followers. This is the biggest algorithmic shift in years.</p>
+    </div>
+
+    <div class="section-title">Claims Validation</div>
+    <table class="data-table">
+      <thead><tr><th>Claim</th><th>Status</th><th>Score</th></tr></thead>
+      <tbody>
+        <tr><td>Interest-based feed (Netflix-style)</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>10/10</td></tr>
+        <tr><td>360Brew AI detects/removes AI slop</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td></tr>
+        <tr><td>Carousels/lists outperform (24.4% vs 6.7% engagement)</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td></tr>
+        <tr><td>Blank connection requests work better</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td></tr>
+        <tr><td>Events as bulk invite lead gen</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>8/10</td></tr>
+        <tr><td>LinkedIn News commenting signals expertise</td><td><span class="pill pill-partial">Partial</span></td><td>7/10</td></tr>
+        <tr><td>LinkedIn Live notifies entire network</td><td><span class="pill pill-partial">Partial</span></td><td>7/10</td></tr>
+        <tr><td>Algorithm reads images (OCR)</td><td><span class="pill pill-unverified">Unconfirmed</span></td><td>4/10</td></tr>
+        <tr><td>Headline: "what you've done" not "what you do"</td><td><span class="pill pill-false">Contradicted</span></td><td>3/10</td></tr>
+        <tr><td>Pre-recorded video uploaded as "Live"</td><td><span class="pill pill-false">TOS Violation</span></td><td>0/10</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-title">Validated Tactics</div>
+    <div class="framework-grid">
+      <div class="framework-card">
+        <h4>"These tools helped me [problem]" Format</h4>
+        <p>Leverages "being understood > competence" psychology. Shows shared experience + tool list = irresistible. End with contextual question tied to content.</p>
+      </div>
+      <div class="framework-card">
+        <h4>LinkedIn News Commenting</h4>
+        <p>Comment on LinkedIn News stories your ICP cares about. Signals topic expertise to algorithm. Piggybacks existing traffic instead of building from zero.</p>
+      </div>
+      <div class="framework-card">
+        <h4>Contextual CTA (Anti-AI-Slop)</h4>
+        <p>Algorithm trained to detect generic engagement bait. Tie your question/CTA directly to the content. Avoid words the algorithm associates with AI-generated slop.</p>
+      </div>
+      <div class="framework-card">
+        <h4>Visual Posts: Non-LinkedIn-Blue Colors</h4>
+        <p>Use colors that contrast with LinkedIn's blue interface to make posts pop. Either genuine selfie (human emotion) or designed graphic in contrasting colors.</p>
+      </div>
+      <div class="framework-card">
+        <h4>Network Page for Active Users</h4>
+        <p>Free alternative to Sales Navigator ($100+/mo). LinkedIn's Network suggestions show active users. Connect on mobile without custom messages for higher acceptance.</p>
+      </div>
+      <div class="framework-card">
+        <h4>Events as Lead Qualification</h4>
+        <p>Create a LinkedIn Event. Bulk invite connections. Acceptance = hand-raised interest signal. No automation needed, reaches hundreds of targeted people.</p>
+      </div>
+    </div>
+
+    <div class="section-title">Red Flags</div>
+    <div class="red-flag">
+      <div class="red-flag-header"><h4>Pre-Recorded Video as LinkedIn Live</h4><span class="pill pill-false">TOS VIOLATION</span></div>
+      <p>Recommends uploading pre-recorded video as "Live" using third-party software. This explicitly violates LinkedIn's Professional Community Policies and risks account restrictions. DO NOT implement.</p>
+    </div>
+    <div class="warning-flag">
+      <h4>Heavily Gated Resources</h4>
+      <p>Key tools, prompts, and app names are hidden behind community signup / paywall. The video is partly a funnel for ClientsImpact.</p>
+    </div>
+
+    <div class="section-title">Sources</div>
+    <ul class="sources-list">
+      <li><a href="https://www.sourcegeek.com/en/news/how-the-linkedin-algorithm-works-2026-update" target="_blank">SourceGeek: LinkedIn Algorithm 2026 (360Brew AI)</a></li>
+      <li><a href="https://sproutsocial.com/insights/linkedin-algorithm/" target="_blank">Sprout Social: LinkedIn Algorithm 2026</a></li>
+      <li><a href="https://www.botdog.co/blog-posts/linkedin-acceptance-rates" target="_blank">BotDog: 16,492 Connection Requests Analyzed</a></li>
+      <li><a href="https://expandi.io/blog/linkedin-carousel/" target="_blank">Expandi: LinkedIn Carousel Guide 2026</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- VIDEO 2: Daniel Priestley -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="video-section">
+    <div class="video-header">
+      <div>
+        <div class="video-title">$7000 Per Day: My LinkedIn Content Strategy Revealed</div>
+        <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">ScoreApp &mdash; Speaker: Daniel Priestley</div>
+      </div>
+      <span class="verdict-badge verdict-caution">USE WITH CAUTION &mdash; 6/10</span>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-item"><div class="meta-label">Published</div><div class="meta-value">2026-02-03</div></div>
+      <div class="meta-item"><div class="meta-label">Duration</div><div class="meta-value">13:51</div></div>
+      <div class="meta-item"><div class="meta-label">Type</div><div class="meta-value" style="color: var(--orange);">Tutorial + Promo</div></div>
+      <div class="meta-item"><div class="meta-label">Trust</div><div class="meta-value">STANDARD</div></div>
+      <div class="meta-item"><div class="meta-label">Transcript</div><div class="meta-value">HIGH</div></div>
+    </div>
+
+    <div class="section-title">Scores</div>
+    <div class="score-row"><span class="score-label">Content Quality</span><div class="score-bar-bg"><div class="score-bar" style="width:65%; background: var(--orange);"></div></div><span class="score-number" style="color: var(--orange);">6.5</span></div>
+    <div class="score-row"><span class="score-label">Credibility</span><div class="score-bar-bg"><div class="score-bar" style="width:60%; background: var(--orange);"></div></div><span class="score-number" style="color: var(--orange);">6.0</span></div>
+    <div class="score-row"><span class="score-label">Actionability</span><div class="score-bar-bg"><div class="score-bar" style="width:65%; background: var(--orange);"></div></div><span class="score-number" style="color: var(--orange);">6.5</span></div>
+
+    <div class="section-title">Core Strategy: "Everyday CTA"</div>
+    <div class="key-point">
+      <h4>Two-Part Daily Post: Value Content + Unrelated "By the way" CTA</h4>
+      <p class="evidence">Post daily with Part 1 (value using 3S+2F framework) and Part 2 (completely unrelated CTA to assessment/waitlist/webinar/mini-course). Claims this removes "Call to Action Anxiety" and converts better than contextual CTAs. <strong style="color: var(--red);">WARNING: Contradicts LinkedIn official guidance and Sanders/Donnelly analysis.</strong></p>
+    </div>
+
+    <div class="section-title">Claims Validation</div>
+    <table class="data-table">
+      <thead><tr><th>Claim</th><th>Status</th><th>Score</th></tr></thead>
+      <tbody>
+        <tr><td>Daniel Priestley credentials (KPI author, entrepreneur)</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td></tr>
+        <tr><td>ScoreApp: legitimate SaaS (150K+ businesses)</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td></tr>
+        <tr><td>LinkedIn video up to 15 min (desktop)</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td></tr>
+        <tr><td>Scarcity psychology ("with or without you")</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>8/10</td></tr>
+        <tr><td>Assessment/waitlist/webinar CTAs</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>8/10</td></tr>
+        <tr><td>Lurker engagement (40 likes, 200 clicks)</td><td><span class="pill pill-partial">Plausible</span></td><td>7/10</td></tr>
+        <tr><td>$7,840/post &amp; $50K/week revenue</td><td><span class="pill pill-unverified">Unverifiable</span></td><td>3/10</td></tr>
+        <tr><td>Later claims "$75K/day"</td><td><span class="pill pill-false">Contradicts own $50K/week</span></td><td>1/10</td></tr>
+        <tr><td>Unrelated CTA outperforms contextual</td><td><span class="pill pill-false">Contradicted</span></td><td>2/10</td></tr>
+        <tr><td>Links in posts don't hurt reach</td><td><span class="pill pill-false">Contradicted</span></td><td>2/10</td></tr>
+        <tr><td>Daily 7x/week posting is optimal</td><td><span class="pill pill-false">Contradicted</span></td><td>2/10</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-title">Useful Framework: 3S's + 2F's Content Angles</div>
+    <div class="framework-grid">
+      <div class="framework-card">
+        <h4>Scary</h4>
+        <p>Disruptive trends, industry threats, alarming news. Creates urgency and stops the scroll.</p>
+      </div>
+      <div class="framework-card">
+        <h4>Strange</h4>
+        <p>Something unexpected, quirky, contrarian. "Nobody is saying it the way you're saying it." Pattern interrupt.</p>
+      </div>
+      <div class="framework-card">
+        <h4>Sexy</h4>
+        <p>Desirable outcomes and results. "How to make $1M" or "Win a major award." Aspirational, prize-focused.</p>
+      </div>
+      <div class="framework-card">
+        <h4>Familiar</h4>
+        <p>Known faces, brands, or concepts. "3 secrets from Warren Buffett..." Leverages existing trust and recognition.</p>
+      </div>
+      <div class="framework-card">
+        <h4>Free Value</h4>
+        <p>Premium content given away free. "We spent $7K on this research &mdash; here it is for free." Must feel like it should cost money.</p>
+      </div>
+      <div class="framework-card">
+        <h4>"With or Without You" Energy</h4>
+        <p>Present CTAs as "it's happening regardless." Zero neediness. "If you want to join, great. If not, totally fine." Confirmed by scarcity psychology research.</p>
+      </div>
+    </div>
+
+    <div class="section-title">Red Flags</div>
+    <div class="red-flag">
+      <div class="red-flag-header"><h4>Revenue Contradiction</h4><span class="pill pill-false">INTERNAL</span></div>
+      <p>Claims "$50,000 per week" (7 posts &times; $7,840) early in video, then claims "$75,000 per day" later. These are off by 10.5x. Unverifiable self-reported metrics.</p>
+    </div>
+    <div class="red-flag">
+      <div class="red-flag-header"><h4>Conflict of Interest</h4><span class="pill pill-partial">MEDIUM</span></div>
+      <p>ScoreApp founder promoting a strategy that requires ScoreApp landing pages. Every "CTA" recommendation drives ScoreApp usage.</p>
+    </div>
+    <div class="warning-flag">
+      <h4>Key Claims Contradict Data</h4>
+      <p>"Links don't hurt" (data: 60% reach reduction). "Unrelated CTA works better" (contradicts LinkedIn official + Sanders). "Post 7x/week" (optimal: 2-5x/week per Buffer 2M+ post analysis).</p>
+    </div>
+
+    <div class="section-title">Notable Quotes</div>
+    <blockquote>"I had what was called CTAA &mdash; Call to Action Anxiety. I didn't know how to thread the needle with this content into the call to action. And then we discovered we don't even need to thread that needle."</blockquote>
+    <blockquote>"With or without your energy &mdash; it's happening with or without you. You can do it or not. Doesn't matter."</blockquote>
+    <blockquote>"Sometimes people are lurking on LinkedIn. They're not liking or engaging, but they're clicking the link because it doesn't notify their friends."</blockquote>
+
+    <div class="section-title">Sources</div>
+    <ul class="sources-list">
+      <li><a href="https://danielpriestley.com/" target="_blank">Daniel Priestley Official</a></li>
+      <li><a href="https://scoreappreview.com/about-scoreapp/" target="_blank">ScoreApp Review</a></li>
+      <li><a href="https://growleads.io/blog/linkedin-algorithm-2026-text-vs-video-reach/" target="_blank">GrowLeads: LinkedIn Algorithm 2026 &mdash; 60% Link Reach Reduction</a></li>
+      <li><a href="https://buffer.com/resources/how-often-to-post-on-linkedin/" target="_blank">Buffer: Optimal LinkedIn Posting Frequency (2M+ posts)</a></li>
+      <li><a href="https://business.linkedin.com/marketing-solutions/success/marketing-terms/cta" target="_blank">LinkedIn Official: CTA Best Practices</a></li>
+      <li><a href="https://scottgould.me/oversubscribed-by-daniel-priestley/" target="_blank">Critical Review: "Oversubscribed" by Daniel Priestley</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- CROSS-VIDEO CONFLICT ANALYSIS -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="video-section">
+    <div class="video-header">
+      <div>
+        <div class="video-title">Cross-Video Conflict Analysis: All 3 LinkedIn Videos</div>
+        <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Sanders/Donnelly vs Mark Firth vs Daniel Priestley</div>
+      </div>
+    </div>
+
+    <div class="conflict-box">
+      <h3>Where The Videos Disagree</h3>
+      <table class="data-table">
+        <thead><tr><th>Topic</th><th>Sanders/Donnelly</th><th>Mark Firth</th><th>Priestley</th><th style="color: var(--green);">Data Favors</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>CTA Style</strong></td>
+            <td>Contextual, integrated into post</td>
+            <td>Contextual (anti-AI-slop)</td>
+            <td>Unrelated "by the way"</td>
+            <td style="color: var(--green);"><strong>Sanders + Firth</strong><br><span style="font-size:0.8rem; color: var(--text-muted)">LinkedIn official + data</span></td>
+          </tr>
+          <tr>
+            <td><strong>Links in Posts</strong></td>
+            <td>Not addressed</td>
+            <td>Not addressed</td>
+            <td>"No penalty"</td>
+            <td style="color: var(--green);"><strong>Caution</strong><br><span style="font-size:0.8rem; color: var(--text-muted)">60% reach reduction in data</span></td>
+          </tr>
+          <tr>
+            <td><strong>Posting Frequency</strong></td>
+            <td>Quality focus</td>
+            <td>Not specified</td>
+            <td>7x/week daily</td>
+            <td style="color: var(--green);"><strong>2-5x/week</strong><br><span style="font-size:0.8rem; color: var(--text-muted)">Buffer 2M+ post study</span></td>
+          </tr>
+          <tr>
+            <td><strong>Key Metrics</strong></td>
+            <td>Reposts &gt; Saves &gt; Sends</td>
+            <td>Not specified</td>
+            <td>Link clicks matter most</td>
+            <td style="color: var(--green);"><strong>Sanders</strong><br><span style="font-size:0.8rem; color: var(--text-muted)">300K+ post analysis</span></td>
+          </tr>
+          <tr>
+            <td><strong>Profile Headline</strong></td>
+            <td>Not specified</td>
+            <td>"What you've done"</td>
+            <td>Not specified</td>
+            <td style="color: var(--green);"><strong>Contested</strong><br><span style="font-size:0.8rem; color: var(--text-muted)">Some say future-focused</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-title">Validated Consensus (All 3 Agree)</div>
+    <div class="key-point">
+      <h4>LinkedIn has fundamentally shifted &mdash; massive opportunity for content creators now</h4>
+      <p class="evidence">All 3 creators confirm: LinkedIn is no longer just for job seekers. It's an active business networking and content platform with less competition than Instagram/YouTube/TikTok.</p>
+    </div>
+    <div class="key-point">
+      <h4>Profile optimization is essential infrastructure before content creation</h4>
+      <p class="evidence">All emphasize: professional photo, CTA-driven banner, Featured section for key content, clear tagline. Treat it as a landing page.</p>
+    </div>
+    <div class="key-point">
+      <h4>Visual content (carousels, images, video) outperforms text-only posts</h4>
+      <p class="evidence">Confirmed by data: carousels get 24.4% engagement vs 6.7% for text. LinkedIn actively pushing video (up to 15 min). Designed graphics stop the scroll.</p>
+    </div>
+    <div class="key-point">
+      <h4>Commenting and engagement drive reach and credibility</h4>
+      <p class="evidence">Sanders: 30/30/10 system. Firth: LinkedIn News commenting. Priestley: daily value sharing. All agree active engagement matters more than passive posting.</p>
+    </div>
+    <div class="key-point">
+      <h4>Lead gen CTAs work best as assessments, webinars, newsletters, or waitlists</h4>
+      <p class="evidence">All recommend specific lead magnets over generic "contact me." Sanders: newsletter-first. Firth: events. Priestley: assessments/waitlists. These are complementary, not conflicting.</p>
+    </div>
+
+    <div class="section-title">Evidence-Based Winners</div>
+    <table class="data-table">
+      <thead><tr><th>Ranking</th><th>Video</th><th>Score</th><th>Best For</th></tr></thead>
+      <tbody>
+        <tr><td style="color: var(--green); font-weight: 700;">#1</td><td><strong>Sanders/Donnelly</strong></td><td>9.0/10</td><td>Complete growth system, proven at scale, verified results</td></tr>
+        <tr><td style="color: var(--yellow); font-weight: 700;">#2</td><td><strong>Mark Firth</strong></td><td>7.2/10</td><td>2026 algorithm specifics, tactical hacks, quick wins</td></tr>
+        <tr><td style="color: var(--orange); font-weight: 700;">#3</td><td><strong>Daniel Priestley</strong></td><td>6.3/10</td><td>Content angle framework (3S+2F), CTA psychology only</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- MEMORY COMMANDS -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="video-section">
+    <div class="video-header">
+      <div><div class="video-title">Persist to Memory</div></div>
+    </div>
+    <div class="memory-block">/memory-write category:"pattern" key:"linkedin-algorithm-2026" value:"LinkedIn deployed 360Brew AI (150B params) shifting to interest-based feed. Content now reaches topic-interested users, not just followers. Carousels 24.4% engagement vs 6.7% text. AI slop actively detected and suppressed. (source: Mark Firth + SourceGeek/SocialBee 2026)"</div>
+    <div class="memory-block">/memory-write category:"pattern" key:"linkedin-3s-2f-content-angles" value:"5 content angles that get cut-through: Scary (disruptive trends), Strange (contrarian/quirky), Sexy (desirable outcomes), Familiar (known faces/brands), Free Value (premium given free). Use for ideation. (source: Daniel Priestley 2026-02-03)"</div>
+    <div class="memory-block">/memory-write category:"gotcha" key:"linkedin-links-reduce-reach" value:"Links in LinkedIn posts cause ~60% reach reduction per 2026 data, despite some creators claiming 'no penalty'. Use lead magnet posts with comment-reply links instead. (source: GrowLeads 2026 + Buffer)"</div>
+    <div class="memory-block">/memory-write category:"gotcha" key:"linkedin-fake-live-tos" value:"Uploading pre-recorded video as LinkedIn Live VIOLATES TOS - risks account restrictions. Mark Firth recommends this but it's explicitly forbidden. (source: LinkedIn Help Center)"</div>
+    <div class="memory-block">/memory-write category:"decision" key:"linkedin-posting-frequency" value:"Optimal LinkedIn posting: 2-5x/week (Buffer 2M+ post analysis). Daily 7x/week NOT optimal despite Priestley's claim. Quality > quantity. Sanders/Donnelly approach confirmed. (source: Buffer 2026)"</div>
+  </div>
+
+  <div style="text-align: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem;">
+    ROK YouTube Intelligence &mdash; Report #2 &mdash; 2 videos analyzed, cross-referenced with Report #1 (Sanders/Donnelly)
+    <br>ContentPulse integration synthesis in progress...
+  </div>
+</div>
+</body>
+</html>

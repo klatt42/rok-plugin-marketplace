@@ -1,0 +1,8 @@
+{
+  "name": "rok-digital-estate",
+  "version": "1.0.0",
+  "description": "Monthly digital estate snapshot for bus factor mitigation. Scans local projects, GitHub repos, deployments, Supabase memory, and infrastructure config. Produces urgency-scored 10-section document with Bus Factor Dashboard, project inventory, deployment map, costs, access guide, and emergency quick-start. Exports to HTML, PDF, and Markdown.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

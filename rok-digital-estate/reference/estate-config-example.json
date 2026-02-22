@@ -1,0 +1,160 @@
+{
+  "_comment": "Copy this file to ~/projects/rok-copilot/estate-snapshots/estate-config.json and populate with real data. This file is read by the infrastructure-analyst agent each snapshot run.",
+
+  "hostinger": {
+    "account_email": "your-email@example.com",
+    "login_method": "Email + password + 2FA (Google Authenticator)",
+    "credential_location": "See master credential location below",
+    "domains": [
+      {
+        "domain": "example.com",
+        "expiry_date": "2027-03-15",
+        "auto_renew": true,
+        "registrar": "Hostinger",
+        "dns_provider": "Hostinger",
+        "annual_cost": 12.99,
+        "notes": "Primary business domain"
+      },
+      {
+        "domain": "example2.com",
+        "expiry_date": "2026-06-01",
+        "auto_renew": false,
+        "registrar": "Hostinger",
+        "dns_provider": "Cloudflare",
+        "annual_cost": 12.99,
+        "notes": "Client project - auto-renew OFF"
+      }
+    ],
+    "vps": [
+      {
+        "name": "VPS-1",
+        "ip": "xxx.xxx.xxx.xxx",
+        "plan": "KVM 2",
+        "monthly_cost": 8.99,
+        "os": "Ubuntu 22.04",
+        "purpose": "Production server for example.com",
+        "ssh_key_location": "~/.ssh/hostinger_rsa"
+      }
+    ]
+  },
+
+  "ghl": {
+    "account_email": "your-email@example.com",
+    "plan": "Agency Unlimited",
+    "monthly_cost": 497.00,
+    "login_method": "Email + password",
+    "purpose": "CRM, funnels, appointment booking",
+    "sub_accounts": [
+      {
+        "name": "Client A",
+        "status": "active",
+        "purpose": "Lead generation funnel"
+      }
+    ]
+  },
+
+  "anthropic_api": {
+    "account_email": "your-email@example.com",
+    "estimated_monthly_cost": 150.00,
+    "plan": "Pay-as-you-go",
+    "api_key_location": "Environment variable ANTHROPIC_API_KEY in ~/.bashrc"
+  },
+
+  "subscriptions": [
+    {
+      "service": "GitHub Pro",
+      "monthly_cost": 4.00,
+      "renewal_date": "2026-03-01",
+      "auto_renew": true,
+      "payment_method": "visa_1234"
+    },
+    {
+      "service": "Netlify Pro",
+      "monthly_cost": 19.00,
+      "renewal_date": "2026-03-15",
+      "auto_renew": true,
+      "payment_method": "visa_1234"
+    },
+    {
+      "service": "Vercel Pro",
+      "monthly_cost": 20.00,
+      "renewal_date": "2026-04-01",
+      "auto_renew": true,
+      "payment_method": "visa_1234"
+    },
+    {
+      "service": "Supabase Pro",
+      "monthly_cost": 25.00,
+      "renewal_date": "2026-03-20",
+      "auto_renew": true,
+      "payment_method": "visa_1234"
+    }
+  ],
+
+  "payment_methods": [
+    {
+      "id": "visa_1234",
+      "type": "Visa",
+      "last_four": "1234",
+      "expiry": "12/2028",
+      "services_using": ["GitHub Pro", "Netlify Pro", "Vercel Pro", "Supabase Pro", "Hostinger"]
+    },
+    {
+      "id": "amex_5678",
+      "type": "Amex",
+      "last_four": "5678",
+      "expiry": "06/2027",
+      "services_using": ["GHL"]
+    }
+  ],
+
+  "contacts": [
+    {
+      "name": "Son 1",
+      "email": "son1@example.com",
+      "phone": "555-123-4567",
+      "role": "Emergency contact / estate executor",
+      "projects": ["all"]
+    },
+    {
+      "name": "Son 2",
+      "email": "son2@example.com",
+      "phone": "555-234-5678",
+      "role": "Technical backup",
+      "projects": ["all"]
+    },
+    {
+      "name": "Client Contact",
+      "email": "client@example.com",
+      "phone": "555-345-6789",
+      "role": "Client - active project",
+      "projects": ["client-project-name"]
+    }
+  ],
+
+  "credential_master_location": "Private notebook in home office desk, top right drawer. Contains all service passwords, recovery codes, and SSH key passphrases.",
+
+  "google_account": {
+    "email": "your-email@gmail.com",
+    "recovery_email": "recovery@example.com",
+    "auth_method": "Password + phone 2FA",
+    "services_linked": ["GitHub OAuth", "Netlify login", "Google Drive backups"]
+  },
+
+  "github_account": {
+    "username": "your-github-username",
+    "auth_method": "Password + phone 2FA + SSH key",
+    "ssh_key_location": "~/.ssh/id_ed25519",
+    "organizations": ["your-org"],
+    "two_factor_backup_location": "Same as credential_master_location"
+  },
+
+  "emergency_priority_order": [
+    "1. Secure all active client deliverables (check CRITICAL tier items)",
+    "2. Ensure domain auto-renewals are ON for all active domains",
+    "3. Download/backup all GitHub repos locally",
+    "4. Review subscription costs and cancel unused services",
+    "5. Check VPS/server status and ensure uptime monitoring",
+    "6. Contact active clients about transition plan"
+  ]
+}

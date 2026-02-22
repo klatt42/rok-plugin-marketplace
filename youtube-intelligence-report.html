@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Intelligence Report - ROK Analysis</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --card-border: #2a2d3a;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --accent: #818cf8;
+      --accent-dim: rgba(129,140,248,0.15);
+      --green: #34d399;
+      --green-dim: rgba(52,211,153,0.15);
+      --red: #f87171;
+      --red-dim: rgba(248,113,113,0.15);
+      --yellow: #fbbf24;
+      --yellow-dim: rgba(251,191,36,0.15);
+      --orange: #fb923c;
+      --blue: #60a5fa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* Header */
+    .report-header {
+      text-align: center;
+      padding: 3rem 2rem;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 3rem;
+    }
+    .report-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    .report-header .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .report-header .date {
+      color: var(--accent);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Video Cards */
+    .video-section {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      margin-bottom: 3rem;
+    }
+    .video-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .video-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      max-width: 70%;
+    }
+    .verdict-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1.2rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .verdict-pass {
+      background: var(--green-dim);
+      color: var(--green);
+      border: 1px solid rgba(52,211,153,0.3);
+    }
+    .verdict-fail {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid rgba(248,113,113,0.3);
+    }
+
+    /* Meta Grid */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .meta-item {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .meta-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+    }
+    .meta-value {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    /* Score Bars */
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .score-label {
+      width: 120px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .score-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--bg);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .score-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+    .score-number {
+      width: 45px;
+      text-align: right;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 2px solid var(--card-border);
+    }
+    .data-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+      vertical-align: top;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Status Pills */
+    .pill {
+      display: inline-block;
+      padding: 0.2rem 0.7rem;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .pill-confirmed { background: var(--green-dim); color: var(--green); }
+    .pill-partial { background: var(--yellow-dim); color: var(--yellow); }
+    .pill-false { background: var(--red-dim); color: var(--red); }
+    .pill-unverified { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+    .pill-high { background: var(--green-dim); color: var(--green); }
+    .pill-medium { background: var(--yellow-dim); color: var(--yellow); }
+    .pill-low { background: var(--red-dim); color: var(--red); }
+
+    /* Section Headers */
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 2rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 1.2em;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* Key Points */
+    .key-point {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 0.75rem;
+      border-left: 3px solid var(--accent);
+    }
+    .key-point-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .key-point h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .key-point .evidence {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .key-point .pills {
+      display: flex;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    /* Framework Cards */
+    .framework-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .framework-card {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .framework-card h4 {
+      color: var(--accent);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    .framework-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Recommendations */
+    .rec-section { margin: 1.5rem 0; }
+    .rec-category {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.4rem 0;
+      margin-bottom: 0.5rem;
+    }
+    .rec-immediate { color: var(--green); }
+    .rec-plan { color: var(--yellow); }
+    .rec-research { color: var(--blue); }
+    .rec-item {
+      padding: 0.6rem 0 0.6rem 1.2rem;
+      border-left: 2px solid var(--card-border);
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
+    }
+
+    /* Memory Commands */
+    .memory-block {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--green);
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Red Flags */
+    .red-flag {
+      background: var(--red-dim);
+      border: 1px solid rgba(248,113,113,0.2);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .red-flag-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .red-flag h4 { color: var(--red); font-size: 0.9rem; }
+    .red-flag p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+    /* Sources */
+    .sources-list {
+      list-style: none;
+      margin: 1rem 0;
+    }
+    .sources-list li {
+      padding: 0.4rem 0;
+      font-size: 0.85rem;
+    }
+    .sources-list a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .sources-list a:hover { text-decoration: underline; }
+
+    /* Quote */
+    blockquote {
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1.25rem;
+      margin: 1rem 0;
+      color: var(--text-muted);
+      font-style: italic;
+      background: var(--accent-dim);
+      border-radius: 0 8px 8px 0;
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--card-border);
+      margin: 2rem 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .video-section { padding: 1.5rem; }
+      .video-title { max-width: 100%; font-size: 1.2rem; }
+      .meta-grid { grid-template-columns: 1fr 1fr; }
+      .framework-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Report Header -->
+    <div class="report-header">
+      <h1>YouTube Intelligence Report</h1>
+      <div class="subtitle">ROK System v3.10 &mdash; Automated Video Analysis &amp; Validation</div>
+      <div class="date">Generated: February 6, 2026</div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- VIDEO 1: MemuBot -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="video-section">
+      <div class="video-header">
+        <div>
+          <div class="video-title">MemuBot: Build and Automate ANYTHING!</div>
+          <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Julian Goldie SEO</div>
+        </div>
+        <span class="verdict-badge verdict-fail">NOT RECOMMENDED</span>
+      </div>
+
+      <!-- Meta -->
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="meta-label">Published</div>
+          <div class="meta-value">2026-02-06</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Duration</div>
+          <div class="meta-value">10:51</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Type</div>
+          <div class="meta-value" style="color: var(--orange);">Promotional</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Trust Weight</div>
+          <div class="meta-value">STANDARD</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Transcript Quality</div>
+          <div class="meta-value">MEDIUM</div>
+        </div>
+      </div>
+
+      <!-- Scores -->
+      <div class="section-title">Scores</div>
+      <div class="score-row">
+        <span class="score-label">Content Quality</span>
+        <div class="score-bar-bg"><div class="score-bar" style="width:45%; background: var(--red);"></div></div>
+        <span class="score-number" style="color: var(--red);">4.5</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">Credibility</span>
+        <div class="score-bar-bg"><div class="score-bar" style="width:25%; background: var(--red);"></div></div>
+        <span class="score-number" style="color: var(--red);">2.5</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">Actionability</span>
+        <div class="score-bar-bg"><div class="score-bar" style="width:30%; background: var(--orange);"></div></div>
+        <span class="score-number" style="color: var(--orange);">3.0</span>
+      </div>
+
+      <!-- Critical Finding -->
+      <div class="section-title">Critical Finding</div>
+      <div class="red-flag">
+        <h4>Product Identity Fraud</h4>
+        <p>The video compares "Meubot" vs "OpenClaw" as competitors &mdash; but they are the <strong>same product</strong> at different points in its naming history (Clawdbot &rarr; Moltbot &rarr; OpenClaw). This is either uninformed or deliberately deceptive.</p>
+      </div>
+
+      <!-- Claims Validation -->
+      <div class="section-title">Claims Validation</div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Claim</th><th>Status</th><th>Score</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Runs locally 24/7</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>8/10</td></tr>
+          <tr><td>Persistent memory</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>8/10</td></tr>
+          <tr><td>Uses Claude API</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td></tr>
+          <tr><td>Proactive automation</td><td><span class="pill pill-partial">Partial</span></td><td>5/10</td></tr>
+          <tr><td>Data stays local / private</td><td><span class="pill pill-false">Misleading</span></td><td>3/10</td></tr>
+          <tr><td>Free to start</td><td><span class="pill pill-false">Misleading</span></td><td>2/10</td></tr>
+          <tr><td>"Destroys" OpenClaw</td><td><span class="pill pill-false">False</span></td><td>0/10</td></tr>
+          <tr><td>20-30% close rate increase</td><td><span class="pill pill-unverified">Unverified</span></td><td>1/10</td></tr>
+          <tr><td>5-minute setup</td><td><span class="pill pill-partial">Optimistic</span></td><td>5/10</td></tr>
+          <tr><td>Secure / private</td><td><span class="pill pill-false">Dangerous</span></td><td>1/10</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Red Flags -->
+      <div class="section-title">Red Flags</div>
+      <div class="red-flag">
+        <div class="red-flag-header">
+          <h4>Active Security Vulnerabilities</h4>
+          <span class="pill pill-low">CRITICAL</span>
+        </div>
+        <p>OX Security found authentication bypass exposing API keys publicly. Credentials stored in cleartext. Hundreds of exposed control panels found in the wild.</p>
+      </div>
+      <div class="red-flag">
+        <div class="red-flag-header">
+          <h4>Hidden API Costs</h4>
+          <span class="pill pill-medium">HIGH</span>
+        </div>
+        <p>"Free to start" hides $25-75/month in Claude API costs. The video never discloses this operating expense.</p>
+      </div>
+      <div class="red-flag">
+        <div class="red-flag-header">
+          <h4>"Theory of Mind" Marketing Hype</h4>
+          <span class="pill pill-medium">HIGH</span>
+        </div>
+        <p>Claims cutting-edge cognitive AI capability. In reality, this is a property of the underlying LLM, not a Moltbot feature.</p>
+      </div>
+      <div class="red-flag">
+        <div class="red-flag-header">
+          <h4>Privacy Contradiction</h4>
+          <span class="pill pill-medium">HIGH</span>
+        </div>
+        <p>"Everything runs locally" &mdash; but all prompts are sent to Anthropic's servers via Claude API. Cannot be fully local while using a cloud API.</p>
+      </div>
+      <div class="red-flag">
+        <div class="red-flag-header">
+          <h4>Primary Intent: Sales Funnel</h4>
+          <span class="pill pill-partial">MEDIUM</span>
+        </div>
+        <p>Video is primarily lead generation for the creator's paid "AI Profit Boardroom" community. Educational content is secondary to conversion.</p>
+      </div>
+
+      <!-- ROK Overlap -->
+      <div class="section-title">ROK Already Does This</div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Moltbot Feature</th><th>ROK Equivalent</th><th>ROK Advantage</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Persistent memory</td><td>Supabase memory-system</td><td>More robust, queryable, synced</td></tr>
+          <tr><td>24/7 operation</td><td>/rok-loop</td><td>Integrated with session management</td></tr>
+          <tr><td>Multi-agent orchestration</td><td>/dispatch, /orchestrate</td><td>Builder+Validator pattern</td></tr>
+          <tr><td>Local execution</td><td>Claude Code CLI</td><td>Already local-first</td></tr>
+          <tr><td>Workflow automation</td><td>ROK skills + 13 hook events</td><td>Deeply integrated</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Sources -->
+      <div class="section-title">Sources</div>
+      <ul class="sources-list">
+        <li><a href="https://www.ox.security/blog/one-step-away-from-a-massive-data-breach-what-we-found-inside-moltbot/" target="_blank">OX Security: Moltbot Data Breach Risk</a></li>
+        <li><a href="https://shellypalmer.com/2026/02/clawdbot-the-gap-between-ai-assistant-hype-and-reality/" target="_blank">Shelly Palmer: Gap Between AI Assistant Hype and Reality</a></li>
+        <li><a href="https://www.cnbc.com/2026/02/02/openclaw-open-source-ai-agent-rise-controversy-clawdbot-moltbot-moltbook.html" target="_blank">CNBC: OpenClaw/Moltbot Controversy</a></li>
+        <li><a href="https://github.com/openclaw/openclaw" target="_blank">OpenClaw GitHub Repository</a></li>
+      </ul>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- VIDEO 2: LinkedIn Growth -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="video-section">
+      <div class="video-header">
+        <div>
+          <div class="video-title">World's No 1 LinkedIn Expert: How To Grow a Personal Brand FAST in 2026</div>
+          <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Callum McDonnell &mdash; Guest: Josh Sanders (Head of Content, Chris Donnelly)</div>
+        </div>
+        <span class="verdict-badge verdict-pass">HIGHLY RECOMMENDED</span>
+      </div>
+
+      <!-- Meta -->
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="meta-label">Published</div>
+          <div class="meta-value">2026-01-28</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Duration</div>
+          <div class="meta-value">1:30:36</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Type</div>
+          <div class="meta-value" style="color: var(--green);">Tutorial / Masterclass</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Trust Weight</div>
+          <div class="meta-value">STANDARD (verified credible)</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Transcript Quality</div>
+          <div class="meta-value">HIGH</div>
+        </div>
+      </div>
+
+      <!-- Scores -->
+      <div class="section-title">Scores</div>
+      <div class="score-row">
+        <span class="score-label">Content Quality</span>
+        <div class="score-bar-bg"><div class="score-bar" style="width:95%; background: var(--green);"></div></div>
+        <span class="score-number" style="color: var(--green);">9.5</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">Credibility</span>
+        <div class="score-bar-bg"><div class="score-bar" style="width:85%; background: var(--green);"></div></div>
+        <span class="score-number" style="color: var(--green);">8.5</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">Actionability</span>
+        <div class="score-bar-bg"><div class="score-bar" style="width:95%; background: var(--green);"></div></div>
+        <span class="score-number" style="color: var(--green);">9.5</span>
+      </div>
+
+      <!-- Claims Validation -->
+      <div class="section-title">Claims Validation</div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Claim</th><th>Status</th><th>Score</th><th>Source</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>180K &rarr; 3M+ followers</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td><td>SuperPen, Nathan Barry</td></tr>
+          <tr><td>$10M+ education business</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>8/10</td><td>Nathan Barry podcast</td></tr>
+          <tr><td>Verb Brands sold ~$25M</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td><td>Campaign Live</td></tr>
+          <tr><td>Bugatti as LinkedIn client</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>10/10</td><td>LinkedIn post</td></tr>
+          <tr><td>180K &rarr; 350K in 3 months</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>8/10</td><td>Timeline matches</td></tr>
+          <tr><td>Nathan Barry reached out</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td><td>Full podcast episode</td></tr>
+          <tr><td>1B LinkedIn users, ~1% post</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td><td>DemandSage</td></tr>
+          <tr><td>Algorithm: dwell time, reposts</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>9/10</td><td>2026 algorithm reports</td></tr>
+          <tr><td>Students 20K &rarr; 100K in 10 weeks</td><td><span class="pill pill-confirmed">Confirmed</span></td><td>8/10</td><td>Multiple documented cases</td></tr>
+          <tr><td>250-300K newsletter subs</td><td><span class="pill pill-partial">Partial</span></td><td>6/10</td><td>~200K verified via Kit</td></tr>
+          <tr><td>50K followers in one day</td><td><span class="pill pill-unverified">Plausible</span></td><td>5/10</td><td>No documentation</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Key Points -->
+      <div class="section-title">Key Points</div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>1. Reposts &gt; Likes/Views as #1 LinkedIn Metric</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-high">HIGH action</span></div>
+        </div>
+        <p class="evidence">Aim for 20% repost rate in first hour. Saves (#2) and Sends (#3) also matter. Key question for every post: "What will make someone look good for sharing this?"</p>
+      </div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>2. 30/30/10 Commenting Strategy (Before Creating Content)</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-high">HIGH action</span></div>
+        </div>
+        <p class="evidence">30% on larger creators (piggyback audience) / 30% on industry voices (build niche authority) / 30% on ICP directly / 10% on friends. Systemize with notifications + posting schedule tracking.</p>
+      </div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>3. Educational Depth + Actionability = Follower Conversion</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-high">HIGH action</span></div>
+        </div>
+        <p class="evidence">"Most engagement &ne; most followers." Track what drives FOLLOWERS, not just likes. People follow when they learn something they can implement immediately.</p>
+      </div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>4. Interest Pillars vs Expert Pillars (5-7 Total)</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-high">HIGH action</span></div>
+        </div>
+        <p class="evidence">Interest pillars = broad topics for explosive growth. Expert pillars = niche topics for targeted leads. Can pivot over time using pre-validated content from smaller creators.</p>
+      </div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>5. Profile = Landing Page</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-high">HIGH action</span></div>
+        </div>
+        <p class="evidence">Professional headshot + CTA banner + branded featured section + story-based About. Tagline visible when commenting. Add a failure for authenticity.</p>
+      </div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>6. Perfect Post Anatomy</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-high">HIGH action</span></div>
+        </div>
+        <p class="evidence">Hook (~65 chars L1, ~40 chars L2) &rarr; Expansion (ICP emotions/problems) &rarr; Bulk (summarized content) &rarr; Dream Destination &rarr; CTA. Numbers in hooks = pattern interrupt. Must "roll off the tongue."</p>
+      </div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>7. Pre-validated Content Strategy</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-high">HIGH action</span></div>
+        </div>
+        <p class="evidence">Build a Creator Inspiration Bank per pillar. Create custom LinkedIn search feeds. Find outlier posts from smaller creators with disproportionate growth. Improve, don't copy.</p>
+      </div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>8. Early Format Adoption = Explosive Growth</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-high">HIGH action</span></div>
+        </div>
+        <p class="evidence">When something works, DOUBLE DOWN immediately. One post using LinkedIn's link shortener drove 8-10K followers. 180K &rarr; 350K in 3 months by riding format waves.</p>
+      </div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>9. Content Funnel on Social</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-high">HIGH action</span></div>
+        </div>
+        <p class="evidence">TOF = broad reach (interest pillars, cheat sheets). MOF = trust (storytelling, newsletter). BOF = conversion (case studies, testimonials). Newsletter is the deplatforming tool.</p>
+      </div>
+
+      <div class="key-point">
+        <div class="key-point-header">
+          <h4>10. Cohort Business Model</h4>
+          <div class="pills"><span class="pill pill-high">HIGH confidence</span> <span class="pill pill-medium">MED action</span></div>
+        </div>
+        <p class="evidence">1:1 calls ($800&rarr;$2K) &rarr; Group MVP &rarr; $4.5-6.5K cohort (10 weeks, 3 calls/week). Community value &gt; content value. 30% enrollment from referrals. Funnel: Newsletter &rarr; Quiz &rarr; Segmented emails &rarr; Webinars.</p>
+      </div>
+
+      <!-- Frameworks -->
+      <div class="section-title">Extracted Frameworks</div>
+      <div class="framework-grid">
+        <div class="framework-card">
+          <h4>30/30/10 Commenting Split</h4>
+          <p>30% large creators / 30% industry voices / 30% ICP / 10% friends. Systemize with notification tracking.</p>
+        </div>
+        <div class="framework-card">
+          <h4>Interest vs Expert Pillars</h4>
+          <p>5-7 pillars total. Interest = growth. Expert = leads. Pivot with pre-validated content over time.</p>
+        </div>
+        <div class="framework-card">
+          <h4>Perfect Post Anatomy</h4>
+          <p>Hook (65/40 chars) &rarr; Expansion (problems) &rarr; Bulk (content) &rarr; Dream Destination &rarr; CTA. Scan-optimized.</p>
+        </div>
+        <div class="framework-card">
+          <h4>Creator Inspiration Bank</h4>
+          <p>Categorized creator list per pillar. Custom LinkedIn search feeds. Track posting times. Find outliers.</p>
+        </div>
+        <div class="framework-card">
+          <h4>Profile as Landing Page</h4>
+          <p>Headshot &rarr; CTA Banner &rarr; Featured Links &rarr; Tagline &rarr; Story About. Every element converts.</p>
+        </div>
+        <div class="framework-card">
+          <h4>Repost-First Metrics</h4>
+          <p>Repost rate &gt; Saves &gt; Sends &gt;&gt; Likes/Views. "What makes them look good for sharing?"</p>
+        </div>
+        <div class="framework-card">
+          <h4>Content Marketing Funnel</h4>
+          <p>TOF (reach) &rarr; MOF (trust via newsletter) &rarr; BOF (conversion via case studies/testimonials).</p>
+        </div>
+        <div class="framework-card">
+          <h4>Newsletter Deplatforming</h4>
+          <p>Lead magnet posts &rarr; Newsletter signup &rarr; Quiz/survey (data) &rarr; Segmented sequences &rarr; Webinars.</p>
+        </div>
+        <div class="framework-card">
+          <h4>Cohort MVP Playbook</h4>
+          <p>1:1 calls &rarr; Small group MVP &rarr; Documented results &rarr; Scaled cohort. Referrals = 30% enrollment.</p>
+        </div>
+        <div class="framework-card">
+          <h4>Pre-validated Content</h4>
+          <p>Find outlier posts from smaller creators. Ask: "How can I make this 10x better?" Improve, then adapt.</p>
+        </div>
+      </div>
+
+      <!-- Notable Quotes -->
+      <div class="section-title">Notable Quotes</div>
+      <blockquote>"The easiest way to convert someone to a follower is simply reminding them to follow."</blockquote>
+      <blockquote>"Being in a space with 200 entrepreneurs making six-seven figures is more valuable than the modules."</blockquote>
+      <blockquote>"Most engagement &ne; most followers." &mdash; Track what drives followers, not vanity metrics.</blockquote>
+      <blockquote>"What are you guys doing? I've never seen organic growth like this." &mdash; Nathan Barry (Kit founder)</blockquote>
+
+      <!-- ROK Recommendations -->
+      <div class="section-title">ROK Integration Recommendations</div>
+
+      <div class="rec-section">
+        <div class="rec-category rec-immediate">Immediate Actions</div>
+        <div class="rec-item">Optimize LinkedIn profiles using the landing page framework (headshot, CTA banner, featured links, about story)</div>
+        <div class="rec-item">Implement 30/30/10 commenting strategy on LinkedIn before heavy content creation</div>
+        <div class="rec-item">Start tracking reposts/saves/sends instead of likes as primary metrics</div>
+        <div class="rec-item">Build a Creator Inspiration Bank spreadsheet for your target niches</div>
+      </div>
+
+      <div class="rec-section">
+        <div class="rec-category rec-plan">Requires Planning</div>
+        <div class="rec-item">LinkedIn Content System: Build systematic workflow using Perfect Post Anatomy + Pre-validated Content + Content Funnel</div>
+        <div class="rec-item">Newsletter Funnel: LinkedIn &rarr; Newsletter &rarr; Quiz &rarr; Segmented sequences &rarr; Webinars</div>
+        <div class="rec-item">Cohort/Group Coaching MVP: Small group &rarr; documented results &rarr; scaled cohort</div>
+      </div>
+
+      <div class="rec-section">
+        <div class="rec-category rec-research">Research Further</div>
+        <div class="rec-item">LinkedIn Algorithm Q1 2026 updates &mdash; check for Chris Donnelly's latest algorithm report</div>
+        <div class="rec-item">Creator Network platforms &mdash; how to join Kit's cross-promotion networks</div>
+        <div class="rec-item">VA commenting delegation &mdash; process for training a VA on brand voice</div>
+      </div>
+
+      <!-- Memory Commands -->
+      <div class="section-title">Persist to Memory</div>
+      <div class="memory-block">/memory-write category:"pattern" key:"linkedin-metrics-priority" value:"LinkedIn metrics priority: 1. Reposts (aim 20% rate in first hour) 2. Saves 3. Sends. Likes/views are vanity metrics. Key question: 'What makes someone look good for sharing this?' (source: Josh Sanders/Chris Donnelly 2026-01-28)"</div>
+      <div class="memory-block">/memory-write category:"pattern" key:"linkedin-commenting-30-30-10" value:"LinkedIn commenting strategy: 30% large creators (piggyback), 30% industry voices (authority), 30% ICP (direct), 10% friends (support). Systemize with notifications + posting schedule tracking. (source: Josh Sanders 2026-01-28)"</div>
+      <div class="memory-block">/memory-write category:"pattern" key:"linkedin-post-anatomy" value:"Perfect LinkedIn post: Hook (~65 chars L1, ~40 chars L2, numbers for pattern interrupt) -> Expansion (ICP emotions/problems) -> Bulk (summarized content) -> Dream Destination (after state) -> CTA. Optimize for scanning: short sentences, white space, no paragraph blocks. (source: Josh Sanders 2026-01-28)"</div>
+      <div class="memory-block">/memory-write category:"pattern" key:"content-pillars-interest-expert" value:"Content pillars: 5-7 total. Interest pillars (broad for growth) + Expert pillars (niche for leads). Pivot over time using pre-validated content from smaller creators. (source: Josh Sanders 2026-01-28)"</div>
+
+      <!-- Sources -->
+      <div class="section-title">Sources</div>
+      <ul class="sources-list">
+        <li><a href="https://superpen.io/blog/chris-donnelly-linkedin-strategy/" target="_blank">SuperPen: Chris Donnelly LinkedIn Strategy</a></li>
+        <li><a href="https://nathanbarry.com/personal-branding-masterclass-how-i-made-10m-on-linkedin-chris-donnelly-088/" target="_blank">Nathan Barry Podcast: Personal Branding Masterclass</a></li>
+        <li><a href="https://thecreatoraccelerator.co.uk/" target="_blank">The Creator Accelerator</a></li>
+        <li><a href="https://socialbee.com/blog/linkedin-algorithm/" target="_blank">LinkedIn Algorithm 2026 &mdash; SocialBee</a></li>
+        <li><a href="https://www.sourcegeek.com/en/news/how-the-linkedin-algorithm-works-2026-update" target="_blank">LinkedIn Algorithm 2026 &mdash; SourceGeek</a></li>
+        <li><a href="https://www.campaignlive.co.uk/article/verb-brands-acquisition-opens-luxury-market-croud/1735923" target="_blank">Verb Brands Acquisition &mdash; Campaign Live</a></li>
+        <li><a href="https://startupsmagazine.co.uk/article-london-entrepreneur-launches-searchable-first-platform-built-ai-search" target="_blank">Searchable Launch &mdash; Startups Magazine</a></li>
+        <li><a href="https://www.demandsage.com/linkedin-statistics/" target="_blank">LinkedIn Statistics 2025 &mdash; DemandSage</a></li>
+      </ul>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem;">
+      ROK YouTube Intelligence &mdash; Generated by /yt-analyze &mdash; 2 videos analyzed
+    </div>
+
+  </div>
+</body>
+</html>

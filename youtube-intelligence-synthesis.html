@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ContentPulse LinkedIn Integration - Cross-Video Synthesis Report</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --card-border: #2a2d3a;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --accent: #818cf8;
+      --accent-dim: rgba(129,140,248,0.15);
+      --green: #34d399;
+      --green-dim: rgba(52,211,153,0.15);
+      --red: #f87171;
+      --red-dim: rgba(248,113,113,0.15);
+      --yellow: #fbbf24;
+      --yellow-dim: rgba(251,191,36,0.15);
+      --orange: #fb923c;
+      --orange-dim: rgba(251,146,60,0.15);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96,165,250,0.15);
+      --cyan: #22d3ee;
+      --cyan-dim: rgba(34,211,238,0.15);
+      --purple: #c084fc;
+      --purple-dim: rgba(192,132,252,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* Header */
+    .report-header { text-align: center; padding: 3rem 2rem; border-bottom: 1px solid var(--card-border); margin-bottom: 3rem; }
+    .report-header h1 { font-size: 2.2rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+    .report-header .subtitle { color: var(--text-muted); font-size: 1rem; }
+    .report-header .date { color: var(--accent); font-size: 0.85rem; margin-top: 0.5rem; }
+
+    /* Sections */
+    .section { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 2.5rem; margin-bottom: 2.5rem; }
+    .section h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .section h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--accent); }
+    .section h4 { font-size: 0.95rem; font-weight: 600; margin: 1.2rem 0 0.5rem; }
+    .section p { color: var(--text-muted); margin-bottom: 0.75rem; font-size: 0.92rem; }
+
+    /* Source cards at top */
+    .source-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 3rem; }
+    .source-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 1.5rem; position: relative; }
+    .source-card .rank { position: absolute; top: -12px; right: 16px; background: var(--accent); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 100px; }
+    .source-card h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
+    .source-card .channel { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .source-card .scores { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .score-pill { padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    .pill-green { background: var(--green-dim); color: var(--green); }
+    .pill-yellow { background: var(--yellow-dim); color: var(--yellow); }
+    .pill-orange { background: var(--orange-dim); color: var(--orange); }
+    .pill-blue { background: var(--blue-dim); color: var(--blue); }
+    .pill-accent { background: var(--accent-dim); color: var(--accent); }
+    .pill-red { background: var(--red-dim); color: var(--red); }
+    .pill-cyan { background: var(--cyan-dim); color: var(--cyan); }
+    .pill-purple { background: var(--purple-dim); color: var(--purple); }
+    .source-verdict { font-size: 0.82rem; font-weight: 600; }
+    .verdict-pass { color: var(--green); }
+    .verdict-mixed { color: var(--yellow); }
+    .verdict-caution { color: var(--orange); }
+
+    /* Tables */
+    .data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.88rem; }
+    .data-table thead th { text-align: left; padding: 0.75rem 1rem; background: var(--bg); color: var(--accent); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 2px solid var(--card-border); }
+    .data-table tbody td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: top; }
+    .data-table tbody tr:hover { background: rgba(129,140,248,0.04); }
+    .data-table .winner { color: var(--green); font-weight: 600; }
+    .data-table .loser { color: var(--red); text-decoration: line-through; opacity: 0.6; }
+    .data-table .neutral { color: var(--text-muted); }
+
+    /* Feature priority table */
+    .priority-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+    .p0 { background: var(--red-dim); color: var(--red); }
+    .p1 { background: var(--orange-dim); color: var(--orange); }
+    .p2 { background: var(--yellow-dim); color: var(--yellow); }
+    .p3 { background: var(--blue-dim); color: var(--blue); }
+
+    /* Confidence bars */
+    .confidence-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.6rem; }
+    .confidence-label { width: 260px; font-size: 0.85rem; color: var(--text-muted); flex-shrink: 0; }
+    .confidence-bar-bg { flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+    .confidence-bar { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+    .confidence-val { width: 80px; text-align: right; font-weight: 700; font-size: 0.82rem; flex-shrink: 0; }
+
+    /* Consensus list */
+    .consensus-item { background: var(--bg); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; border-left: 3px solid var(--green); }
+    .consensus-item h4 { color: var(--green); margin-bottom: 0.5rem; }
+
+    /* Risk items */
+    .risk-item { background: var(--bg); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; border-left: 3px solid var(--red); }
+    .risk-item h4 { color: var(--red); margin-bottom: 0.5rem; }
+
+    /* Matrix */
+    .matrix-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.82rem; }
+    .matrix-table th { background: var(--bg); color: var(--accent); padding: 0.6rem; text-align: center; font-weight: 600; border: 1px solid var(--card-border); }
+    .matrix-table td { padding: 0.5rem; text-align: center; border: 1px solid var(--card-border); color: var(--text-muted); }
+    .matrix-table td:first-child { text-align: left; font-weight: 600; color: var(--text); background: var(--bg); }
+
+    /* Phase timeline */
+    .phase { background: var(--bg); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--accent); position: relative; }
+    .phase-num { position: absolute; top: -10px; left: -2px; background: var(--accent); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 0 6px 6px 0; }
+    .phase h4 { color: var(--accent); margin-bottom: 0.75rem; font-size: 1rem; }
+    .phase ul { list-style: none; padding: 0; }
+    .phase li { padding: 0.3rem 0; padding-left: 1.5rem; position: relative; font-size: 0.88rem; color: var(--text-muted); }
+    .phase li::before { content: ""; position: absolute; left: 0; top: 0.65rem; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-dim); border: 2px solid var(--accent); }
+
+    /* Build vs Knowledge */
+    .bvk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .bvk-col { background: var(--bg); border-radius: 12px; padding: 1.5rem; }
+    .bvk-col h4 { margin-bottom: 1rem; }
+    .bvk-col ul { list-style: none; padding: 0; }
+    .bvk-col li { padding: 0.35rem 0; font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; position: relative; }
+    .bvk-col li::before { content: ""; position: absolute; left: 0; top: 0.55rem; width: 6px; height: 6px; border-radius: 2px; }
+    .build-col li::before { background: var(--green); }
+    .knowledge-col li::before { background: var(--blue); }
+
+    /* Nav */
+    .toc { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 1.5rem 2rem; margin-bottom: 2.5rem; }
+    .toc h3 { font-size: 0.9rem; color: var(--accent); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .toc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+    .toc a { color: var(--text-muted); text-decoration: none; font-size: 0.82rem; padding: 0.3rem 0; transition: color 0.2s; }
+    .toc a:hover { color: var(--accent); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .source-grid { grid-template-columns: 1fr; }
+      .toc-grid { grid-template-columns: 1fr; }
+      .bvk-grid { grid-template-columns: 1fr; }
+      .section { padding: 1.5rem; }
+    }
+
+    /* Conflict highlight */
+    .conflict-winner { background: var(--green-dim); padding: 0.1rem 0.4rem; border-radius: 3px; }
+    .conflict-loser { background: var(--red-dim); padding: 0.1rem 0.4rem; border-radius: 3px; text-decoration: line-through; }
+
+    /* Inline icon style */
+    .icon { display: inline-block; width: 24px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="report-header">
+      <h1>ContentPulse &times; LinkedIn Intelligence</h1>
+      <div class="subtitle">Cross-Video Synthesis &amp; Feature Integration Roadmap</div>
+      <div class="date">Generated February 7, 2026 &mdash; 3 Videos &bull; 24,343 Words Analyzed &bull; 6 External Validations</div>
+    </div>
+
+    <!-- SOURCE CARDS -->
+    <div class="source-grid">
+      <div class="source-card">
+        <div class="rank">#1 Source</div>
+        <h3>Josh Sanders / Chris Donnelly</h3>
+        <div class="channel">Callum McDonnell &bull; 1h 30m</div>
+        <div class="scores">
+          <span class="score-pill pill-green">Credibility 8.5</span>
+          <span class="score-pill pill-green">Actionability 9.5</span>
+        </div>
+        <div class="source-verdict verdict-pass">HIGHLY RECOMMENDED</div>
+        <p style="font-size: 0.78rem; margin-top: 0.5rem; color: var(--text-muted);">300K+ posts analyzed. Most frameworks validated. Gold standard for post structure.</p>
+      </div>
+      <div class="source-card">
+        <div class="rank">#2 Source</div>
+        <h3>Mark Firth</h3>
+        <div class="channel">Mark Firth &bull; 9m</div>
+        <div class="scores">
+          <span class="score-pill pill-yellow">Credibility 7.3</span>
+          <span class="score-pill pill-yellow">Actionability 7.0</span>
+        </div>
+        <div class="source-verdict verdict-mixed">MIXED - Good Tactics, Some Risk</div>
+        <p style="font-size: 0.78rem; margin-top: 0.5rem; color: var(--text-muted);">Confirmed algorithm shift. Good commenting tactics. Fake Live = TOS violation.</p>
+      </div>
+      <div class="source-card">
+        <div class="rank">#3 Source</div>
+        <h3>Daniel Priestley / ScoreApp</h3>
+        <div class="channel">ScoreApp &bull; 14m</div>
+        <div class="scores">
+          <span class="score-pill pill-orange">Credibility 6.0</span>
+          <span class="score-pill pill-orange">Actionability 6.5</span>
+        </div>
+        <div class="source-verdict verdict-caution">USE WITH CAUTION</div>
+        <p style="font-size: 0.78rem; margin-top: 0.5rem; color: var(--text-muted);">3S+2F framework is useful. Key claims contradicted by data. Revenue numbers inconsistent.</p>
+      </div>
+    </div>
+
+    <!-- TABLE OF CONTENTS -->
+    <div class="toc">
+      <h3>Report Sections</h3>
+      <div class="toc-grid">
+        <a href="#consensus">1. Validated Consensus</a>
+        <a href="#winners">2. Evidence-Based Winners</a>
+        <a href="#conflicts">3. Conflict Resolution Table</a>
+        <a href="#strategy">4. Unified LinkedIn Strategy</a>
+        <a href="#matrix">5. Content Matrix (Pillars &times; Angles)</a>
+        <a href="#features">6. ContentPulse Feature Map</a>
+        <a href="#bvk">7. Build vs Knowledge</a>
+        <a href="#roadmap">8. Implementation Roadmap</a>
+        <a href="#risks">9. Risk Register (Do NOT Build)</a>
+        <a href="#confidence">10. Confidence Ratings</a>
+        <a href="#gaps">11. Research Gaps</a>
+      </div>
+    </div>
+
+    <!-- 1. VALIDATED CONSENSUS -->
+    <div class="section" id="consensus">
+      <h2><span class="icon">&#x2705;</span> 1. Validated Consensus</h2>
+      <p>These insights carry highest confidence &mdash; independent sources converged on the same conclusions.</p>
+
+      <div class="consensus-item">
+        <h4>Commenting Is a Growth Engine</h4>
+        <p><strong>Sanders:</strong> 30/30/10 allocation across audience tiers. <strong>Firth:</strong> Commenting signals expertise to interest-based algorithm (confirmed by 360Brew AI). <strong>Priestley:</strong> Lurker engagement &mdash; 99% of audience watches but never engages.</p>
+        <p style="color: var(--green);"><strong>Synthesis:</strong> Strategic commenting is a distribution mechanism equal to or greater than posting itself.</p>
+      </div>
+
+      <div class="consensus-item">
+        <h4>Profile = Conversion Asset</h4>
+        <p><strong>Sanders:</strong> "Profile as Landing Page" with headshot, CTA banner, featured, origin story. <strong>Firth:</strong> Featured section as lead gen real estate. <strong>Priestley:</strong> Profile must support the CTA chain.</p>
+        <p style="color: var(--green);"><strong>Synthesis:</strong> The profile is not a resume. Featured section is unanimously underutilized prime real estate.</p>
+      </div>
+
+      <div class="consensus-item">
+        <h4>Content Must Serve a Funnel</h4>
+        <p><strong>Sanders:</strong> Explicit TOF/MOF/BOF framework. <strong>Firth:</strong> Implied via Events + Featured. <strong>Priestley:</strong> CTA types map to funnel stages.</p>
+        <p style="color: var(--green);"><strong>Synthesis:</strong> Every piece of content should have a known position in the funnel. Random posting = wasted effort.</p>
+      </div>
+
+      <div class="consensus-item">
+        <h4>Contextual CTAs Win (2/3 agree, 1 contradicted)</h4>
+        <p><strong>Sanders + Firth:</strong> Contextual, integrated CTAs. <strong>Priestley:</strong> "By the way" unrelated CTAs &mdash; <span style="color: var(--red);">CONTRADICTED</span> by LinkedIn guidance and higher-credibility sources.</p>
+        <p style="color: var(--green);"><strong>Synthesis:</strong> ContentPulse should enforce contextual CTA matching.</p>
+      </div>
+    </div>
+
+    <!-- 2. EVIDENCE-BASED WINNERS -->
+    <div class="section" id="winners">
+      <h2><span class="icon">&#x1F3C6;</span> 2. Evidence-Based Winners</h2>
+
+      <h3>Post Structure: Sanders Wins Decisively</h3>
+      <p>Based on 300K+ post analysis with specific, measurable parameters:</p>
+      <table class="data-table">
+        <thead><tr><th>Element</th><th>Specification</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Hook Line 1</td><td>~65 characters</td><td>Sanders (validated)</td></tr>
+          <tr><td>Hook Line 2</td><td>~40 characters</td><td>Sanders (validated)</td></tr>
+          <tr><td>Structure</td><td>Hook &rarr; Expansion &rarr; Bulk &rarr; Dream Destination &rarr; CTA</td><td>Sanders (validated)</td></tr>
+          <tr><td>Validation</td><td>Pre-validated content: find outlier posts from small creators, improve them</td><td>Sanders (validated)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Metrics Hierarchy: Sanders Wins</h3>
+      <p>Reposts &gt; Saves &gt; Sends &gt;&gt; Likes/Views. Aligns with LinkedIn's distribution-weighted algorithm. Priestley's focus on link clicks is counter-productive (60% reach reduction).</p>
+
+      <h3>Content Ideation: Sanders + Priestley Complement Each Other</h3>
+      <p>Pillars define WHAT you talk about. 3S+2F defines the EMOTIONAL ANGLE. They operate at different levels and create a powerful content matrix when combined.</p>
+
+      <h3>Posting Frequency: Data Supports 2-5x/Week</h3>
+      <p>Priestley claims 7x/week. <span class="conflict-loser">Contradicted</span> by LinkedIn data and large-scale studies. <span class="conflict-winner">Sanders' quality-first approach + 2-5x/week</span> is the winner.</p>
+
+      <h3>Lead Generation: Sanders' Deplatforming Funnel</h3>
+      <p>Lead magnet &rarr; Newsletter &rarr; Quiz &rarr; Segmented emails &rarr; Webinars. Most sophisticated pathway. Firth's Events and Priestley's assessments fit WITHIN this framework.</p>
+    </div>
+
+    <!-- 3. CONFLICT RESOLUTION -->
+    <div class="section" id="conflicts">
+      <h2><span class="icon">&#x26A0;</span> 3. Conflict Resolution</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>Topic</th><th>Sanders</th><th>Firth</th><th>Priestley</th><th>Data Favors</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600;">CTA Style</td>
+            <td class="winner">Contextual, integrated</td>
+            <td class="winner">Contextual</td>
+            <td class="loser">Unrelated "by the way"</td>
+            <td><span class="conflict-winner">Sanders + Firth</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">Links in Posts</td>
+            <td class="neutral">Not addressed</td>
+            <td class="neutral">Not addressed</td>
+            <td class="loser">"No penalty"</td>
+            <td><span class="conflict-winner">~60% reach reduction</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">Posting Frequency</td>
+            <td class="winner">Quality focus</td>
+            <td class="neutral">Not specified</td>
+            <td class="loser">7x/week</td>
+            <td><span class="conflict-winner">2-5x/week optimal</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">Key Metrics</td>
+            <td class="winner">Reposts &gt; Saves &gt; Sends</td>
+            <td class="neutral">Not specified</td>
+            <td class="loser">Link clicks</td>
+            <td><span class="conflict-winner">Sanders (300K+ posts)</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">Connection Messages</td>
+            <td class="neutral">Not specified</td>
+            <td class="winner">Blank requests win (16K study)</td>
+            <td class="neutral">Not addressed</td>
+            <td><span class="conflict-winner">Firth (data-backed)</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">LinkedIn Live</td>
+            <td class="neutral">Not addressed</td>
+            <td class="loser">Fake Live via upload</td>
+            <td class="neutral">Not addressed</td>
+            <td><span style="color: var(--red);">TOS VIOLATION - Avoid</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. UNIFIED STRATEGY -->
+    <div class="section" id="strategy">
+      <h2><span class="icon">&#x1F3AF;</span> 4. Unified LinkedIn Strategy</h2>
+
+      <div class="phase">
+        <div class="phase-num">WEEKS 1-2</div>
+        <h4>Phase 1: Foundation</h4>
+        <ul>
+          <li>Professional headshot + CTA banner image with clear value proposition</li>
+          <li>Featured section: lead magnets, top posts, or upcoming Event</li>
+          <li>About section as origin story (Sanders) with contextual CTA</li>
+          <li>Headline as value proposition, not job title</li>
+          <li>Define 3-4 Expert Pillars + 2-3 Interest Pillars</li>
+          <li>Cross-reference pillars with 3S+2F angles to build content matrix</li>
+          <li>Start 30/30/10 commenting: 10-15 thoughtful comments/day</li>
+        </ul>
+      </div>
+
+      <div class="phase">
+        <div class="phase-num">WEEKS 3-4</div>
+        <h4>Phase 2: Content Engine</h4>
+        <ul>
+          <li>Hook: L1 ~65 chars, L2 ~40 chars (Sanders anatomy)</li>
+          <li>Body: Expansion &rarr; Bulk &rarr; Dream Destination &rarr; CTA</li>
+          <li>Pre-validated content approach: find outlier posts, improve them</li>
+          <li>Contextual CTAs only &mdash; no "by the way" disconnected CTAs</li>
+          <li>NO links in post body (use first-comment or bio link)</li>
+          <li>3-4 posts/week mixing TOF, MOF, and BOF content</li>
+          <li>Track reposts &gt; saves &gt; sends as primary metrics</li>
+        </ul>
+      </div>
+
+      <div class="phase">
+        <div class="phase-num">WEEKS 5+</div>
+        <h4>Phase 3: Lead Generation</h4>
+        <ul>
+          <li>Lead magnet aligned to pillars (assessment/quiz)</li>
+          <li>Newsletter for deplatforming (own your audience)</li>
+          <li>LinkedIn Events for high-intent leads (Firth)</li>
+          <li>Webinars for conversion (Sanders)</li>
+          <li>Segmented email sequences based on quiz/assessment responses</li>
+          <li>Blank connection requests to active commenters</li>
+          <li>"With or without you" CTA energy &mdash; never desperate</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 5. CONTENT MATRIX -->
+    <div class="section" id="matrix">
+      <h2><span class="icon">&#x1F9E9;</span> 5. Content Matrix (Pillars &times; 3S+2F Angles)</h2>
+      <p>Pillars define WHAT you talk about (Sanders). Angles define HOW you frame it (Priestley). This matrix generates months of content ideas.</p>
+
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Pillar</th>
+            <th>&#x1F631; Scary</th>
+            <th>&#x1F47D; Strange</th>
+            <th>&#x1F525; Sexy</th>
+            <th>&#x1F44B; Familiar</th>
+            <th>&#x1F381; Free</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Expert Pillar 1</td>
+            <td>Disruptive trend</td>
+            <td>Contrarian take</td>
+            <td>Dream outcome</td>
+            <td>Known figure quote</td>
+            <td>Free framework</td>
+          </tr>
+          <tr>
+            <td>Expert Pillar 2</td>
+            <td>Industry risk</td>
+            <td>Unexpected data</td>
+            <td>Case study result</td>
+            <td>Shared experience</td>
+            <td>Free template</td>
+          </tr>
+          <tr>
+            <td>Expert Pillar 3</td>
+            <td>Common mistake</td>
+            <td>Myth debunked</td>
+            <td>Revenue story</td>
+            <td>Industry event</td>
+            <td>Free checklist</td>
+          </tr>
+          <tr>
+            <td>Interest Pillar 1</td>
+            <td>Personal failure</td>
+            <td>Unusual lesson</td>
+            <td>Aspirational goal</td>
+            <td>Relatable moment</td>
+            <td>Free resource</td>
+          </tr>
+          <tr>
+            <td>Interest Pillar 2</td>
+            <td>Wake-up call</td>
+            <td>Behind the scenes</td>
+            <td>Lifestyle win</td>
+            <td>Pop culture tie</td>
+            <td>Free tool list</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size: 0.82rem; text-align: center; margin-top: 0.5rem;">5 pillars &times; 5 angles = 25 unique post ideas per cycle. Rotate for 5+ months of content.</p>
+    </div>
+
+    <!-- 6. CONTENTPULSE FEATURE MAP -->
+    <div class="section" id="features">
+      <h2><span class="icon">&#x1F6E0;</span> 6. ContentPulse Feature Map</h2>
+      <p>How each validated insight maps to ContentPulse app features, prioritized by impact and build effort.</p>
+
+      <h3>Content Creation Tools</h3>
+      <table class="data-table">
+        <thead><tr><th>Feature</th><th>Priority</th><th>Maps To</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Post Composer with Sanders Anatomy</td><td><span class="priority-badge p0">P0</span></td><td>Extends <code>/generate</code></td><td>Sanders</td></tr>
+          <tr><td>Hook Generator (65/40 char counts)</td><td><span class="priority-badge p0">P0</span></td><td>New component on Generate</td><td>Sanders</td></tr>
+          <tr><td>Link Warning System</td><td><span class="priority-badge p0">P0</span></td><td>Validation on Generate</td><td>Data consensus</td></tr>
+          <tr><td>CTA Contextuality Checker</td><td><span class="priority-badge p1">P1</span></td><td>Validation on Generate</td><td>Sanders + Firth</td></tr>
+          <tr><td>Content Matrix Generator</td><td><span class="priority-badge p1">P1</span></td><td>New ideation tool</td><td>Sanders + Priestley</td></tr>
+          <tr><td>Pre-Validation Scanner</td><td><span class="priority-badge p1">P1</span></td><td>New research tool</td><td>Sanders</td></tr>
+          <tr><td>Creator Inspiration Bank</td><td><span class="priority-badge p1">P1</span></td><td>Extends Library</td><td>Sanders</td></tr>
+          <tr><td>Format Templates (5-7 core)</td><td><span class="priority-badge p1">P1</span></td><td>Templates on Generate</td><td>Sanders</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Analytics &amp; Metrics</h3>
+      <table class="data-table">
+        <thead><tr><th>Feature</th><th>Priority</th><th>Maps To</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Repost-First Dashboard</td><td><span class="priority-badge p0">P0</span></td><td>Extends <code>/dashboard</code></td><td>Sanders</td></tr>
+          <tr><td>Funnel Position Tagging (TOF/MOF/BOF)</td><td><span class="priority-badge p1">P1</span></td><td>Content metadata</td><td>Sanders</td></tr>
+          <tr><td>Pillar Performance Tracker</td><td><span class="priority-badge p1">P1</span></td><td>Analytics page</td><td>Sanders</td></tr>
+          <tr><td>Commenting ROI Tracker</td><td><span class="priority-badge p2">P2</span></td><td>New analytics widget</td><td>Sanders + Firth</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Engagement Systems</h3>
+      <table class="data-table">
+        <thead><tr><th>Feature</th><th>Priority</th><th>Maps To</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>30/30/10 Commenting Planner</td><td><span class="priority-badge p0">P0</span></td><td><strong>New page:</strong> <code>/linkedin/commenting</code></td><td>Sanders + Firth</td></tr>
+          <tr><td>Comment Frameworks (not canned)</td><td><span class="priority-badge p2">P2</span></td><td>Component on Commenting</td><td>Sanders + Firth</td></tr>
+          <tr><td>Connection Queue</td><td><span class="priority-badge p2">P2</span></td><td>New widget</td><td>Firth</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Scheduling &amp; Calendar</h3>
+      <table class="data-table">
+        <thead><tr><th>Feature</th><th>Priority</th><th>Maps To</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>20-Day Rolling Calendar</td><td><span class="priority-badge p1">P1</span></td><td><strong>New page:</strong> <code>/linkedin/calendar</code></td><td>Priestley (adapted)</td></tr>
+          <tr><td>Frequency Governor (3-4/week default)</td><td><span class="priority-badge p1">P1</span></td><td>Calendar validation</td><td>Data consensus</td></tr>
+          <tr><td>Pillar + Funnel Balance Checkers</td><td><span class="priority-badge p2">P2</span></td><td>Calendar analytics</td><td>Sanders</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Profile &amp; Lead Gen</h3>
+      <table class="data-table">
+        <thead><tr><th>Feature</th><th>Priority</th><th>Maps To</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Profile Audit Scorecard</td><td><span class="priority-badge p1">P1</span></td><td><strong>New page:</strong> <code>/linkedin/profile</code></td><td>All three</td></tr>
+          <tr><td>CTA Library (assessment, waitlist, webinar, mini-course)</td><td><span class="priority-badge p1">P1</span></td><td>New component</td><td>Priestley + Sanders</td></tr>
+          <tr><td>Newsletter Integration</td><td><span class="priority-badge p2">P2</span></td><td>Lead gen section</td><td>Sanders</td></tr>
+          <tr><td>Event Builder Guide</td><td><span class="priority-badge p3">P3</span></td><td>Educational content</td><td>Firth</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 7. BUILD vs KNOWLEDGE -->
+    <div class="section" id="bvk">
+      <h2><span class="icon">&#x1F4CA;</span> 7. Build vs Knowledge</h2>
+      <p>Not everything should be a feature. Some insights are better delivered as education.</p>
+
+      <div class="bvk-grid">
+        <div class="bvk-col build-col">
+          <h4 style="color: var(--green);">BUILD as Features</h4>
+          <ul>
+            <li>Hook character counting (65/40) &mdash; every post</li>
+            <li>Content pillar &times; angle matrix &mdash; ideation</li>
+            <li>30/30/10 commenting tracker &mdash; daily habit</li>
+            <li>Repost-first metrics display &mdash; every view</li>
+            <li>Link-in-post warning &mdash; prevents mistakes</li>
+            <li>CTA contextuality check &mdash; every post</li>
+            <li>Post structure template &mdash; every post</li>
+            <li>Frequency governor &mdash; calendar logic</li>
+            <li>Rolling 20-day calendar &mdash; scheduling</li>
+            <li>Pillar/funnel balance &mdash; ongoing</li>
+            <li>Pre-validation scanner &mdash; ideation</li>
+            <li>Creator Inspiration Bank &mdash; collection</li>
+            <li>Profile audit scorecard &mdash; periodic</li>
+          </ul>
+        </div>
+        <div class="bvk-col knowledge-col">
+          <h4 style="color: var(--blue);">DELIVER as Education</h4>
+          <ul>
+            <li>Interest vs Expert Pillars concept &mdash; onboarding</li>
+            <li>Content Marketing Funnel theory &mdash; in-app module</li>
+            <li>"Profile as Landing Page" philosophy &mdash; setup wizard</li>
+            <li>Newsletter deplatforming strategy &mdash; guide</li>
+            <li>"With or without you" CTA energy &mdash; tooltip</li>
+            <li>3S+2F angle definitions &mdash; tooltip in matrix</li>
+            <li>Blank connection requests &mdash; tip in queue</li>
+            <li>Lurker engagement (99%) &mdash; dashboard note</li>
+            <li>Events as lead gen &mdash; guide</li>
+            <li>Dream Destination concept &mdash; tooltip</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. IMPLEMENTATION ROADMAP -->
+    <div class="section" id="roadmap">
+      <h2><span class="icon">&#x1F680;</span> 8. ContentPulse Implementation Roadmap</h2>
+
+      <div class="phase" style="border-left-color: var(--red);">
+        <div class="phase-num" style="background: var(--red);">PHASE 1: WEEKS 1-4</div>
+        <h4 style="color: var(--red);">Core Composer Enhancements</h4>
+        <ul>
+          <li>Post Composer with Sanders' Hook &rarr; Expansion &rarr; Bulk &rarr; Dream &rarr; CTA anatomy</li>
+          <li>Hook Generator with real-time character count (65/40 targets)</li>
+          <li>Link Warning System on content generation form</li>
+          <li>CTA Contextuality Checker</li>
+          <li>5-7 Format Templates (list, story, carousel, contrarian, data, how-to, case study)</li>
+        </ul>
+      </div>
+
+      <div class="phase" style="border-left-color: var(--orange);">
+        <div class="phase-num" style="background: var(--orange);">PHASE 2: WEEKS 5-8</div>
+        <h4 style="color: var(--orange);">Engagement Engine</h4>
+        <ul>
+          <li>30/30/10 Commenting Planner &amp; Tracker (new <code>/linkedin/commenting</code> page)</li>
+          <li>Repost-First Analytics Dashboard (extend existing dashboard)</li>
+          <li>Creator Inspiration Bank (extend Library with tagging)</li>
+        </ul>
+      </div>
+
+      <div class="phase" style="border-left-color: var(--yellow);">
+        <div class="phase-num" style="background: var(--yellow); color: #000;">PHASE 3: WEEKS 9-12</div>
+        <h4 style="color: var(--yellow);">Strategic Planning</h4>
+        <ul>
+          <li>Content Matrix Generator (Pillars &times; 3S+2F angles)</li>
+          <li>20-Day Rolling Calendar with Frequency Governor (new <code>/linkedin/calendar</code>)</li>
+          <li>Pillar &amp; Funnel Balance Checkers</li>
+          <li>Profile Audit Scorecard (new <code>/linkedin/profile</code>)</li>
+        </ul>
+      </div>
+
+      <div class="phase" style="border-left-color: var(--green);">
+        <div class="phase-num" style="background: var(--green); color: #000;">PHASE 4: WEEKS 13-16</div>
+        <h4 style="color: var(--green);">Lead Generation</h4>
+        <ul>
+          <li>CTA Library with funnel-stage matching</li>
+          <li>Pre-Validation Scanner (find outlier posts for inspiration)</li>
+          <li>Lead Magnet Tracker</li>
+          <li>Newsletter Integration (email platform connection)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 9. RISK REGISTER -->
+    <div class="section" id="risks">
+      <h2><span class="icon">&#x1F6D1;</span> 9. Risk Register &mdash; Do NOT Build</h2>
+      <p>Based on contradicted or low-confidence claims from the analyzed videos.</p>
+
+      <div class="risk-item">
+        <h4>"Fake LinkedIn Live" Feature</h4>
+        <p><strong>Source:</strong> Firth &bull; <strong>Risk:</strong> TOS violation &mdash; account suspension/ban. Pre-recording and uploading as "Live" violates LinkedIn Terms of Service.</p>
+      </div>
+
+      <div class="risk-item">
+        <h4>Unrelated/Random CTA System</h4>
+        <p><strong>Source:</strong> Priestley &bull; <strong>Risk:</strong> Contradicted by Sanders, Firth, and LinkedIn's own official guidance. "By the way" disconnected CTAs reduce effectiveness.</p>
+      </div>
+
+      <div class="risk-item">
+        <h4>Daily Posting Encouragement</h4>
+        <p><strong>Source:</strong> Priestley &bull; <strong>Risk:</strong> Contradicted by engagement data from multiple studies. 2-5x/week is optimal. Over-posting dilutes quality signals.</p>
+      </div>
+
+      <div class="risk-item">
+        <h4>"Links Don't Hurt" Messaging</h4>
+        <p><strong>Source:</strong> Priestley &bull; <strong>Risk:</strong> Flatly contradicted by ~60% reach reduction data from multiple independent studies.</p>
+      </div>
+
+      <div class="risk-item">
+        <h4>Image OCR Optimization Claims</h4>
+        <p><strong>Source:</strong> Firth &bull; <strong>Risk:</strong> "Algorithm reads images" is unconfirmed. Do not promise this capability in ContentPulse.</p>
+      </div>
+
+      <div class="risk-item">
+        <h4>Revenue Projection Tools Using Priestley's Numbers</h4>
+        <p><strong>Source:</strong> Priestley &bull; <strong>Risk:</strong> Internal contradiction ($50K/week vs $75K/day) destroys number credibility entirely.</p>
+      </div>
+    </div>
+
+    <!-- 10. CONFIDENCE RATINGS -->
+    <div class="section" id="confidence">
+      <h2><span class="icon">&#x1F4CA;</span> 10. Confidence Ratings</h2>
+
+      <div class="confidence-row">
+        <div class="confidence-label">Post structure (Hook anatomy, char counts)</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:95%; background: var(--green);"></div></div>
+        <div class="confidence-val" style="color: var(--green);">Very High</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">Commenting as growth mechanism</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:95%; background: var(--green);"></div></div>
+        <div class="confidence-val" style="color: var(--green);">Very High</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">Contextual CTAs over unrelated</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:85%; background: var(--green);"></div></div>
+        <div class="confidence-val" style="color: var(--green);">High</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">Links reduce reach ~60%</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:85%; background: var(--green);"></div></div>
+        <div class="confidence-val" style="color: var(--green);">High</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">Repost-first metrics hierarchy</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:82%; background: var(--green);"></div></div>
+        <div class="confidence-val" style="color: var(--green);">High</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">2-5x/week optimal frequency</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:82%; background: var(--green);"></div></div>
+        <div class="confidence-val" style="color: var(--green);">High</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">30/30/10 commenting split</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:72%; background: var(--yellow);"></div></div>
+        <div class="confidence-val" style="color: var(--yellow);">Med-High</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">3S+2F content angles</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:60%; background: var(--yellow);"></div></div>
+        <div class="confidence-val" style="color: var(--yellow);">Medium</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">Blank connection requests better</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:55%; background: var(--yellow);"></div></div>
+        <div class="confidence-val" style="color: var(--yellow);">Medium</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">20-day rolling calendar</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:55%; background: var(--yellow);"></div></div>
+        <div class="confidence-val" style="color: var(--yellow);">Medium</div>
+      </div>
+      <div class="confidence-row">
+        <div class="confidence-label">Events as lead gen</div>
+        <div class="confidence-bar-bg"><div class="confidence-bar" style="width:55%; background: var(--yellow);"></div></div>
+        <div class="confidence-val" style="color: var(--yellow);">Medium</div>
+      </div>
+    </div>
+
+    <!-- 11. GAPS -->
+    <div class="section" id="gaps">
+      <h2><span class="icon">&#x1F50D;</span> 11. Research Gaps</h2>
+      <p>Significant blind spots not covered by any of the 3 videos. ContentPulse should research independently.</p>
+
+      <h3>Critical Gaps</h3>
+      <table class="data-table">
+        <thead><tr><th>Gap</th><th>Impact on ContentPulse</th></tr></thead>
+        <tbody>
+          <tr><td>Company Page vs Personal Profile</td><td>Many users manage company pages with different algorithmic treatment</td></tr>
+          <tr><td>Multi-Format Optimization (Video, Carousels, Docs)</td><td>Carousels have unique engagement patterns not covered</td></tr>
+          <tr><td>LinkedIn Ads Integration</td><td>Organic + paid interaction strategy needed</td></tr>
+          <tr><td>Industry-Specific Benchmarks</td><td>"Good" engagement varies dramatically by industry</td></tr>
+          <tr><td>LinkedIn Analytics API Limits</td><td>What can ContentPulse actually automate vs manual tracking?</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Moderate Gaps</h3>
+      <table class="data-table">
+        <thead><tr><th>Gap</th><th>Impact</th></tr></thead>
+        <tbody>
+          <tr><td>Team/Employee Advocacy</td><td>Multi-person posting coordination</td></tr>
+          <tr><td>DM Strategy</td><td>Moving engaged followers to conversations</td></tr>
+          <tr><td>LinkedIn SEO</td><td>Search discoverability beyond feed</td></tr>
+          <tr><td>A/B Testing</td><td>Systematic hook/format/CTA testing</td></tr>
+          <tr><td>Competitor Intelligence</td><td>Tracking what works for competitors</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--card-border); margin-top: 2rem;">
+      <p>Generated by <strong>ROK YouTube Intelligence Plugin v1.1.0</strong></p>
+      <p style="margin-top: 0.3rem;">3 videos analyzed &bull; 24,343 words processed &bull; 6 external validations &bull; 37 claims cross-referenced</p>
+      <p style="margin-top: 0.3rem;">Sanders/Donnelly (8.5/10) &bull; Firth (7.3/10) &bull; Priestley (6.0/10)</p>
+    </div>
+
+  </div>
+</body>
+</html>

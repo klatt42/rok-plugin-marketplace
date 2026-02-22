@@ -164,6 +164,11 @@
       "name": "learning-output-style",
       "source": "./learning-output-style",
       "description": "Interactive learning mode that requests meaningful code contributions at decision points (mimics the unshipped Learning output style)."
+    },
+    {
+      "name": "rok-digital-estate",
+      "source": "./rok-digital-estate",
+      "description": "Monthly digital estate snapshot for bus factor mitigation. Scans local projects, GitHub repos, deployments, Supabase memory, and infrastructure config. Produces urgency-scored 10-section document with Bus Factor Dashboard, project inventory, deployment map, costs, access guide, and emergency quick-start. Exports to HTML, PDF, and Markdown."
     }
   ]
 }
