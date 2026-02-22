@@ -274,6 +274,39 @@ def generate_estate_html(data: dict, output_path: str):
           <span style="color:{TEXT_DARK};margin-left:8px">{escape_html(step_text)}</span>
         </div>"""
 
+    # Plugin Portfolio section
+    plugin_portfolio = data.get("plugin_portfolio", {})
+    plugin_section_html = ""
+    if plugin_portfolio:
+        categories = plugin_portfolio.get("categories", {})
+        cat_html = ""
+        for cat_name, plugins in categories.items():
+            plugin_rows = ""
+            for pl in plugins:
+                plugin_rows += f"""
+                <tr>
+                  <td style="font-weight:600;white-space:nowrap">{escape_html(pl.get('name', ''))}</td>
+                  <td style="font-size:12px">{escape_html(pl.get('description', ''))}</td>
+                </tr>"""
+            cat_html += f"""
+            <h3 style="margin-top:16px">{escape_html(cat_name)} ({len(plugins)})</h3>
+            <table><tr><th style="width:200px">Plugin</th><th>Description</th></tr>
+            {plugin_rows}
+            </table>"""
+        plugin_section_html = f"""
+<div class="section">
+  <h2>11. Plugin Portfolio</h2>
+  <p style="color:{TEXT_MUTED};font-size:13px;margin-bottom:12px">
+    {plugin_portfolio.get('total_plugins', 0)} custom Claude Code plugins in
+    <a href="{escape_html(plugin_portfolio.get('repository', ''))}" style="color:{AMBER}">rok-plugin-marketplace</a>
+  </p>
+  <div class="summary-grid">
+    <div class="summary-card"><div class="label">Total Plugins</div><div class="value">{plugin_portfolio.get('total_plugins', 0)}</div></div>
+    <div class="summary-card"><div class="label">Categories</div><div class="value">{len(categories)}</div></div>
+  </div>
+  {cat_html}
+</div>"""
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -442,6 +475,9 @@ def generate_estate_html(data: dict, output_path: str):
   <p style="color:{TEXT_MUTED};font-size:13px;margin-bottom:16px">For Ron's sons -- numbered steps in priority order:</p>
   {steps_html}
 </div>
+
+<!-- 11. Plugin Portfolio -->
+{plugin_section_html}
 
 <div style="text-align:center;padding:16px;color:{TEXT_MUTED};font-size:12px">
   Digital Estate Snapshot v{version} | Generated {gen_date} | rok-digital-estate plugin
@@ -627,6 +663,16 @@ def generate_estate_pdf(data: dict, output_path: str):
             pdf.multi_cell(0, 5, latin_safe(step_text))
             pdf.ln(2)
 
+    # 11. Plugin Portfolio
+    plugin_portfolio = data.get("plugin_portfolio", {})
+    if plugin_portfolio:
+        pdf.section_title(f"11. Plugin Portfolio ({plugin_portfolio.get('total_plugins', 0)} plugins)")
+        categories = plugin_portfolio.get("categories", {})
+        for cat_name, plugins in categories.items():
+            pdf.sub_title(f"{cat_name} ({len(plugins)})")
+            rows = [[pl.get("name", ""), pl.get("description", "")[:80]] for pl in plugins]
+            pdf.add_table(["Plugin", "Description"], rows, [50, 140])
+
     pdf.output(output_path)
 
 
@@ -708,6 +754,24 @@ def generate_estate_md(data: dict, output_path: str):
             lines.append(f"{i}. {step_text}")
         lines.append("")
         lines.append("---")
+        lines.append("")
+
+        # 11. Plugin Portfolio
+        plugin_portfolio = data.get("plugin_portfolio", {})
+        if plugin_portfolio:
+            lines.append(f"## 11. Plugin Portfolio ({plugin_portfolio.get('total_plugins', 0)} plugins)")
+            lines.append(f"**Repository:** {plugin_portfolio.get('repository', '')}")
+            lines.append("")
+            for cat_name, plugins in plugin_portfolio.get("categories", {}).items():
+                lines.append(f"### {cat_name} ({len(plugins)})")
+                lines.append("| Plugin | Description |")
+                lines.append("|--------|-------------|")
+                for pl in plugins:
+                    lines.append(f"| {pl.get('name', '')} | {pl.get('description', '')} |")
+                lines.append("")
+            lines.append("---")
+            lines.append("")
+
         lines.append(f"*Digital Estate Snapshot v{version} | Generated {gen_date} | rok-digital-estate plugin*")
 
         md = "\n".join(lines)
