@@ -14,6 +14,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import sys
 from datetime import date
 
@@ -63,6 +64,7 @@ DIMENSION_NAMES = {
     "responsive_design": "Responsive",
     "security": "Security",
     "performance": "Performance",
+    "e2e_validation": "E2E Validation",
 }
 
 # Multi-model badge labels and colors
@@ -146,6 +148,19 @@ def group_issues_by_severity(issues: list) -> dict:
     return {k: groups[k] for k in order if k in groups}
 
 
+def screenshot_thumb_html(issue: dict) -> str:
+    """Generate HTML img tag for E2E screenshot if path exists."""
+    ss_path = issue.get("screenshot_path", "")
+    if ss_path and os.path.exists(ss_path):
+        abs_ss = os.path.abspath(ss_path).replace("\\", "/")
+        return (
+            f'<br><img src="file:///{abs_ss}" '
+            f'style="max-width:600px;border:1px solid #E2E8F0;margin:8px 0;border-radius:4px" '
+            f'alt="E2E Screenshot">'
+        )
+    return ""
+
+
 def format_model_badges_html(source_models):
     """Generate HTML badge spans for model attribution."""
     if not source_models:
@@ -206,6 +221,9 @@ def generate_html(data: dict, output_path: str):
     is_multi = review_mode == "multi"
     model_scores = data.get("model_scores", {})
     consensus_analysis = data.get("consensus_analysis", {})
+    e2e_included = data.get("e2e_included", False)
+    journey_results = data.get("journey_results", [])
+    screenshot_dir = data.get("screenshot_dir", "")
 
     vc = VERDICT_COLORS.get(verdict, VERDICT_COLORS["FAIL"])
 
@@ -273,6 +291,41 @@ def generate_html(data: dict, output_path: str):
           {mc_rows}
         </table>"""
 
+    # Build E2E journey results table (HTML)
+    e2e_journey_html = ""
+    if e2e_included and journey_results:
+        journey_rows = ""
+        for jr in journey_results:
+            jn = escape_html(jr.get("name", ""))
+            jstatus = jr.get("status", "UNKNOWN")
+            jclass = escape_html(jr.get("classification", ""))
+            steps_total = jr.get("steps_total", 0)
+            steps_passed = jr.get("steps_passed", 0)
+            if jstatus == "PASS":
+                status_badge = '<span style="background:#059669;color:white;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600">PASS</span>'
+            elif jstatus == "FAIL":
+                status_badge = '<span style="background:#DC2626;color:white;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600">FAIL</span>'
+            else:
+                status_badge = f'<span style="background:#D97706;color:white;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600">{escape_html(jstatus)}</span>'
+            journey_rows += f"""
+            <tr>
+              <td style="font-weight:600">{jn}</td>
+              <td style="text-align:center">{status_badge}</td>
+              <td style="text-align:center;font-size:12px;color:#64748B">{jclass}</td>
+              <td style="text-align:center">{steps_passed}/{steps_total}</td>
+            </tr>"""
+        e2e_journey_html = f"""
+        <h2>E2E Journey Results</h2>
+        <table>
+          <tr>
+            <th>Journey</th>
+            <th style="text-align:center;width:80px">Status</th>
+            <th style="text-align:center;width:90px">Type</th>
+            <th style="text-align:center;width:70px">Steps</th>
+          </tr>
+          {journey_rows}
+        </table>"""
+
     # Build issue tables
     grouped = group_issues_by_severity(issues)
     issue_sections = ""
@@ -299,7 +352,7 @@ def generate_html(data: dict, output_path: str):
             <tr>
               <td colspan="{colspan}" style="background:{sc['bg']};padding:8px 12px;font-size:13px">
                 <strong>Issue:</strong> {escape_html(iss.get('description',''))}<br>
-                <strong>Fix:</strong> {escape_html(iss.get('recommendation',''))}
+                <strong>Fix:</strong> {escape_html(iss.get('recommendation',''))}{screenshot_thumb_html(iss)}
               </td>
             </tr>"""
 
@@ -512,6 +565,8 @@ def generate_html(data: dict, output_path: str):
 
   {model_comparison_html}
 
+  {e2e_journey_html}
+
   <h2>Executive Summary</h2>
   <p class="text-block">{exec_summary}</p>
 
@@ -603,6 +658,8 @@ def generate_pdf(data: dict, output_path: str):
     review_mode = data.get("review_mode", "single")
     is_multi = review_mode == "multi"
     model_scores = data.get("model_scores", {})
+    e2e_included = data.get("e2e_included", False)
+    journey_results = data.get("journey_results", [])
 
     # ── Verdict + Score ──
     pdf.set_font("Helvetica", "B", 28)
@@ -743,6 +800,46 @@ def generate_pdf(data: dict, output_path: str):
             pdf.ln()
         pdf.ln(4)
 
+    # ── E2E Journey Results (PDF) ──
+    if e2e_included and journey_results:
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.set_text_color(*INDIGO_RGB)
+        pdf.cell(0, 8, "E2E Journey Results", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(1)
+
+        jr_headers = ["Journey", "Status", "Type", "Steps"]
+        jr_widths = [70, 30, 35, 35]
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_fill_color(*INDIGO_RGB)
+        pdf.set_text_color(255, 255, 255)
+        for i, h in enumerate(jr_headers):
+            pdf.cell(jr_widths[i], 6, h, border=1, fill=True, align="C")
+        pdf.ln()
+
+        pdf.set_font("Helvetica", "", 9)
+        for jr_idx, jr in enumerate(journey_results):
+            if jr_idx % 2 == 0:
+                pdf.set_fill_color(248, 250, 252)
+            else:
+                pdf.set_fill_color(255, 255, 255)
+
+            jstatus = jr.get("status", "UNKNOWN")
+            if jstatus == "PASS":
+                pdf.set_text_color(6, 95, 70)
+            elif jstatus == "FAIL":
+                pdf.set_text_color(153, 27, 27)
+            else:
+                pdf.set_text_color(133, 77, 14)
+
+            pdf.cell(jr_widths[0], 6, latin_safe(jr.get("name", "")), border=1, fill=True)
+            pdf.cell(jr_widths[1], 6, jstatus, border=1, fill=True, align="C")
+            pdf.set_text_color(60, 60, 60)
+            pdf.cell(jr_widths[2], 6, latin_safe(jr.get("classification", "")), border=1, fill=True, align="C")
+            steps_str = f"{jr.get('steps_passed', 0)}/{jr.get('steps_total', 0)}"
+            pdf.cell(jr_widths[3], 6, steps_str, border=1, fill=True, align="C")
+            pdf.ln()
+        pdf.ln(4)
+
     # ── Executive Summary ──
     pdf.set_text_color(*INDIGO_RGB)
     pdf.set_font("Helvetica", "B", 12)
@@ -810,6 +907,15 @@ def generate_pdf(data: dict, output_path: str):
                 pdf.multi_cell(sum(issue_widths[1:]), 4, truncate(latin_safe(f"Fix: {rec}"), 120))
                 pdf.set_font("Helvetica", "", 7.5)
 
+            # E2E screenshot embedding
+            ss_path = iss.get("screenshot_path", "")
+            if ss_path and os.path.exists(ss_path):
+                try:
+                    pdf.image(ss_path, x=pdf.l_margin + issue_widths[0], w=150)
+                    pdf.ln(5)
+                except Exception:
+                    pass  # Skip if image can't be embedded
+
         pdf.ln(4)
 
     # ── Recommendations ──
@@ -850,6 +956,9 @@ def generate_md(data: dict, output_path: str):
     is_multi = review_mode == "multi"
     model_scores = data.get("model_scores", {})
     consensus_analysis = data.get("consensus_analysis", {})
+    e2e_included = data.get("e2e_included", False)
+    journey_results = data.get("journey_results", [])
+    screenshot_dir = data.get("screenshot_dir", "")
 
     lines = []
 
@@ -927,6 +1036,20 @@ def generate_md(data: dict, output_path: str):
             lines.append("| " + " | ".join(row) + " |")
         lines.append("")
 
+    # E2E Journey Results (Markdown)
+    if e2e_included and journey_results:
+        lines.append("## E2E Journey Results")
+        lines.append("")
+        lines.append("| Journey | Status | Type | Steps |")
+        lines.append("|---------|--------|------|-------|")
+        for jr in journey_results:
+            jn = jr.get("name", "")
+            jstatus = jr.get("status", "UNKNOWN")
+            jclass = jr.get("classification", "")
+            steps_str = f"{jr.get('steps_passed', 0)}/{jr.get('steps_total', 0)}"
+            lines.append(f"| {jn} | {jstatus} | {jclass} | {steps_str} |")
+        lines.append("")
+
     # Issues by Severity
     grouped = group_issues_by_severity(issues)
     for sev, sev_issues in grouped.items():
@@ -949,6 +1072,10 @@ def generate_md(data: dict, output_path: str):
                 if agreement:
                     found_by += f" ({agreement})"
                 lines.append(f"- **Found by**: {found_by}")
+            ss_path = iss.get("screenshot_path", "")
+            if ss_path:
+                # Use relative path from screenshot_dir for portability
+                lines.append(f"- **Screenshot**: ![E2E Screenshot](./{ss_path})")
             lines.append("")
 
     # Recommendations
@@ -1018,6 +1145,15 @@ def main():
     generate_pdf(data, paths["pdf"])
     generate_md(data, paths["md"])
 
+    # Copy E2E screenshots to output directory if present
+    screenshot_dir = data.get("screenshot_dir", "")
+    screenshots_dest = ""
+    if screenshot_dir and os.path.isdir(screenshot_dir):
+        screenshots_dest = os.path.join(paths["folder"], "e2e-screenshots")
+        if os.path.exists(screenshots_dest):
+            shutil.rmtree(screenshots_dest)
+        shutil.copytree(screenshot_dir, screenshots_dest)
+
     result = {
         "html": paths["html"],
         "pdf": paths["pdf"],
@@ -1026,6 +1162,8 @@ def main():
         "verdict": data.get("verdict", ""),
         "score": data.get("production_readiness_score", 0),
     }
+    if screenshots_dest:
+        result["screenshots"] = screenshots_dest
     print(json.dumps(result, indent=2))
 
 

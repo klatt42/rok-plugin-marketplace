@@ -1,7 +1,7 @@
 {
   "name": "production-code-review",
-  "version": "2.0.0",
-  "description": "Multi-model production code review supporting Claude, Codex CLI, and Gemini CLI in single or parallel mode. 6 specialized dimensions with consensus scoring across models. Generates scored reports with production readiness verdict exported to MD, PDF, and HTML.",
+  "version": "3.0.0",
+  "description": "Multi-model production code review supporting Claude, Codex CLI, and Gemini CLI in single or parallel mode. 7 dimensions (6 static + optional E2E browser validation) with consensus scoring across models. E2E validates live user journeys via browser automation with screenshot evidence. Generates scored reports with production readiness verdict exported to MD, PDF, and HTML.",
   "author": {
     "name": "ROK Agency"
   }

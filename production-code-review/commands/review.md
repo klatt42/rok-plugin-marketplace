@@ -1,7 +1,7 @@
 ---
-description: Comprehensive pre-production code review with single or multi-model (Claude + Codex + Gemini) parallel analysis
-argument-hint: [path/to/project] [--mode=single|multi] [--model=claude|codex|gemini] [--scope=full|focused] [--include=dimensions]
-allowed-tools: Bash(git:*), Bash(npm:*), Bash(npx:*), Bash(find:*), Bash(wc:*), Bash(ls:*), Bash(python3:*), Bash(codex:*), Bash(gemini:*), Bash(timeout:*), Bash(which:*), Read, Glob, Grep, Write, Task, TaskOutput, TodoWrite
+description: Comprehensive pre-production code review with single or multi-model (Claude + Codex + Gemini) parallel analysis. Optional E2E browser validation via --e2e flag.
+argument-hint: [path/to/project] [--mode=single|multi] [--model=claude|codex|gemini] [--scope=full|focused] [--include=dimensions] [--e2e]
+allowed-tools: Bash(git:*), Bash(npm:*), Bash(npx:*), Bash(find:*), Bash(wc:*), Bash(ls:*), Bash(python3:*), Bash(codex:*), Bash(gemini:*), Bash(timeout:*), Bash(which:*), Bash(curl:*), Bash(kill:*), Read, Glob, Grep, Write, Task, TaskOutput, TodoWrite
 ---
 
 # Production Code Review
@@ -11,11 +11,13 @@ Run a comprehensive, multi-dimensional code review before deploying to productio
 ## Usage
 
 ```
-/production-code-review:review                              # Full review of cwd (single/claude)
+/production-code-review:review                              # Full review of cwd (single/claude, 6 static dimensions)
 /production-code-review:review /path/to/project             # Specific project
 /production-code-review:review --scope=focused src/         # Focus on src/ only
 /production-code-review:review --include=security,tests     # Only specific dimensions
+/production-code-review:review --e2e                        # Include E2E browser validation (7th dimension)
 /production-code-review:review --mode=multi                 # Multi-model: Claude + Codex + Gemini
+/production-code-review:review --mode=multi --e2e           # Multi-model + E2E validation
 /production-code-review:review --mode=single --model=codex  # Single-model: Codex only
 /production-code-review:review --mode=single --model=gemini # Single-model: Gemini only
 ```
@@ -24,7 +26,8 @@ Run a comprehensive, multi-dimensional code review before deploying to productio
 
 - **path** (optional): Project directory. Default: current working directory.
 - **--scope** (optional): `full` (default) or `focused` (only specified subdirectory).
-- **--include** (optional): Comma-separated dimensions to run. Default: all. Options: `quality`, `tests`, `ui`, `responsive`, `security`, `performance`.
+- **--include** (optional): Comma-separated dimensions to run. Default: all 6 static. Options: `quality`, `tests`, `ui`, `responsive`, `security`, `performance`, `e2e_validation`.
+- **--e2e** (optional): Include E2E browser validation as 7th dimension. Default: OFF. Requires frontend project and browser tools.
 - **--mode** (optional): `single` (default) or `multi`. Single uses one model; multi uses all 3 in parallel.
 - **--model** (optional): `claude` (default), `codex`, or `gemini`. Only applies in single mode.
 
@@ -107,14 +110,18 @@ Scope: [full | focused on X]
 
 ### Phase 2: Dispatch Reviews (Branching by Mode)
 
-Determine which of the 6 dimensions to launch based on the `--include` flag (default: all):
+Determine which dimensions to launch based on the `--include` flag (default: all 6 static) and `--e2e` flag:
 
+**Static Dimensions (always available, default ON):**
 1. **code-quality-reviewer** (key: `code_quality`) - DRY, SOLID, naming, structure, dead code
 2. **test-coverage-reviewer** (key: `testing`) - Coverage gaps, test quality, E2E
 3. **ui-ux-reviewer** (key: `ui_ux`) - Contrast, fonts, images, accessibility
 4. **responsive-design-reviewer** (key: `responsive_design`) - Breakpoints, mobile, touch targets
 5. **security-reviewer** (key: `security`) - OWASP Top 10, secrets, injection
 6. **performance-reviewer** (key: `performance`) - Bundle size, N+1, memory leaks
+
+**Live Dimension (opt-in via `--e2e` flag or `--include=e2e_validation`):**
+7. **e2e-validator** (key: `e2e_validation`) - Live browser testing of user journeys, screenshots, responsive viewport checks. Only dispatched to Claude (not Codex/Gemini CLIs).
 
 For each dimension, read the corresponding agent definition from:
 `~/.claude/plugins/marketplaces/rok-plugin-marketplace/production-code-review/agents/{agent-name}.md`
@@ -203,6 +210,31 @@ Dispatch ALL available models simultaneously. For each applicable dimension, lau
 
 This means up to 18 parallel review tasks (6 dimensions x 3 models). All should be dispatched in a single message for maximum parallelism.
 
+**Note on E2E in multi-model mode**: E2E validation is ONLY dispatched to Claude (via Task subagent). Codex and Gemini CLIs cannot control browsers, so E2E is skipped for external models. This means multi-model + E2E = up to 19 parallel tasks (18 static + 1 E2E).
+
+---
+
+#### E2E Validation Dispatch (all modes)
+
+If `--e2e` flag is present OR `--include` contains `e2e_validation`:
+
+1. Read the e2e-validator agent definition from:
+   `~/.claude/plugins/marketplaces/rok-plugin-marketplace/production-code-review/agents/e2e-validator.md`
+
+2. Launch the e2e-validator agent via Task with `run_in_background: true`:
+   - The agent handles its own server startup/shutdown internally
+   - It dispatches browser-qa sub-agents for each discovered journey
+   - It runs in parallel with all static dimension agents
+
+3. The e2e-validator prompt should include:
+   - The Project Context Brief from Phase 1
+   - The e2e-validator agent instructions
+   - The project path
+   - Instruction to return ONLY structured JSON in the required output format
+
+Agent model assignment:
+- **e2e-validator**: Sonnet (research + orchestration)
+
 ### Phase 3: Collect and Synthesize Results
 
 Collection and synthesis differ by mode:
@@ -216,9 +248,27 @@ Collection and synthesis differ by mode:
 3. **Handle failures**: If an agent timed out or failed, note as "incomplete" with score 50
 4. **Filter issues**: Only include issues with `confidence >= 80`
 5. **Deduplicate**: If multiple agents flag the same file:line, merge findings
-6. **Calculate Production Readiness Score**:
+6. **Collect E2E results** (if E2E was dispatched):
+   - Use `TaskOutput` with `block: true` for the e2e-validator agent
+   - Parse JSON output. If e2e-validator returned `"score": null`, E2E was skipped -- do NOT include in weighted scoring.
+   - Extract `journey_results` and `screenshot_dir` for the report
+   - Handle timeout: default E2E score to 50 if timed out
+
+7. **Calculate Production Readiness Score**:
 
 ```
+# If E2E was included and returned a valid score:
+weighted = (
+  code_quality * 0.15 +
+  testing * 0.15 +
+  ui_ux * 0.10 +
+  responsive * 0.10 +
+  security * 0.20 +
+  performance * 0.10 +
+  e2e_validation * 0.20
+)
+
+# If E2E was NOT included (default, backward compatible):
 weighted = (
   code_quality * 0.20 +
   testing * 0.20 +
@@ -232,7 +282,7 @@ penalties = (critical_count * 10) + (high_count * 3)
 final = max(0, min(100, round(weighted - penalties)))
 ```
 
-7. **Determine Verdict**:
+8. **Determine Verdict**:
    - `final >= 85` AND `critical_count == 0`: **PASS**
    - `final >= 70` AND `critical_count == 0`: **PASS_WITH_WARNINGS**
    - `final < 70` OR `critical_count > 0`: **FAIL**
@@ -324,18 +374,27 @@ final = max(0, min(100, round(weighted - penalties)))
 | Responsive      | 75    | 4      |
 | Security        | 90    | 1      |
 | Performance     | 72    | 3      |
+| E2E Validation  | 85    | 2      |  ← only if --e2e flag used
 
 **Critical**: 0  |  **High**: 5  |  **Medium**: 8  |  **Low**: 7
 
+### E2E Journey Results (only if --e2e)
+| Journey          | Status  | Steps |
+|------------------|---------|-------|
+| Login Flow       | PASS    | 6/6   |
+| Dashboard CRUD   | FAIL    | 4/7   |
+| Settings Page    | PASS    | 5/5   |
+
 ### Top Issues
 1. [SEC-001] SQL injection in user endpoint - src/api/users.ts:42
-2. [TEST-003] No tests for auth middleware - src/middleware/auth.ts
-3. [RD-002] Table overflows on mobile - src/components/Dashboard.tsx:67
+2. [E2E-001] Dashboard CRUD fails at delete step - app/dashboard/page.tsx
+3. [TEST-003] No tests for auth middleware - src/middleware/auth.ts
 
 ### Exports
 - Markdown: [path]
 - PDF: [path]
 - HTML: [path]
+- Screenshots: [path] (if E2E)
 ```
 
 ---
@@ -358,8 +417,15 @@ final = max(0, min(100, round(weighted - penalties)))
 | Responsive      | 75     | 72    | 78     | 75        | 4      |
 | Security        | 90     | 88    | 92     | 90        | 1      |
 | Performance     | 72     | 75    | 70     | 72        | 3      |
+| E2E Validation  | 85     | --    | --     | 85        | 2      |  ← Claude only, if --e2e
 
 **Critical**: 0  |  **High**: 5  |  **Medium**: 8  |  **Low**: 7
+
+### E2E Journey Results (only if --e2e)
+| Journey          | Status  | Steps |
+|------------------|---------|-------|
+| Login Flow       | PASS    | 6/6   |
+| Dashboard CRUD   | FAIL    | 4/7   |
 
 ### High-Confidence Consensus Findings (2-3 models agree)
 1. [SEC-001] SQL injection in user endpoint (3/3 models) - src/api/users.ts:42
@@ -367,19 +433,22 @@ final = max(0, min(100, round(weighted - penalties)))
 3. [PERF-002] Unoptimized image loading (3/3 models) - src/components/Hero.tsx:15
 
 ### Unique Findings
-4. [CQ-005] God component exceeds 500 lines (Claude only) - src/components/Dashboard.tsx
-5. [RD-004] Missing touch target sizing (Gemini only) - src/components/Nav.tsx:28
+4. [E2E-001] Dashboard CRUD fails at delete step (Claude E2E) - app/dashboard/page.tsx
+5. [CQ-005] God component exceeds 500 lines (Claude only) - src/components/Dashboard.tsx
+6. [RD-004] Missing touch target sizing (Gemini only) - src/components/Nav.tsx:28
 
 ### Model Agreement Summary
 - High agreement issues: [count]
 - Unique Claude findings: [count]
 - Unique Codex findings: [count]
 - Unique Gemini findings: [count]
+- E2E findings (Claude only): [count]
 
 ### Exports
 - Markdown: [path]
 - PDF: [path]
 - HTML: [path]
+- Screenshots: [path] (if E2E)
 ```
 
 ## Export JSON Schema
@@ -430,9 +499,19 @@ final = max(0, min(100, round(weighted - penalties)))
   "executive_summary": "2-3 sentence overall assessment",
   "recommendations": ["...", "..."],
   "tech_stack": "Next.js 14, React 18, Tailwind CSS",
-  "files_reviewed_total": 147
+  "files_reviewed_total": 147,
+  "e2e_included": false,
+  "journey_results": [],
+  "e2e_screenshots": [],
+  "screenshot_dir": ""
 }
 ```
+
+**E2E-specific fields** (present when `e2e_included` is true):
+- `journey_results`: Array of `{ name, classification, status, steps_total, steps_passed, screenshot_dir }`
+- `e2e_screenshots`: Array of `{ journey, step, path }` for report embedding
+- `screenshot_dir`: Base directory for all E2E screenshots
+- E2E issues include `screenshot_path` field referencing the relevant screenshot
 
 ### Multi-model Schema
 
@@ -496,7 +575,11 @@ final = max(0, min(100, round(weighted - penalties)))
   "executive_summary": "2-3 sentence overall assessment including model agreement notes",
   "recommendations": ["...", "..."],
   "tech_stack": "Next.js 14, React 18, Tailwind CSS",
-  "files_reviewed_total": 147
+  "files_reviewed_total": 147,
+  "e2e_included": false,
+  "journey_results": [],
+  "e2e_screenshots": [],
+  "screenshot_dir": ""
 }
 ```
 
@@ -512,29 +595,38 @@ final = max(0, min(100, round(weighted - penalties)))
 - **CLI authentication failure**: Warn user with the appropriate auth command (`codex auth` or `gemini auth`), fall back to single/claude
 - **CLI output not valid JSON**: Attempt regex extraction of JSON from code blocks (````json...````). If that fails, assign fallback score 50 with 0 issues for that dimension.
 - **All external CLIs fail in multi-mode**: Degrade gracefully to single/claude, inform user that external models were unavailable and review continues with Claude only
+- **E2E: Dev server fails to start**: E2E score = null (not included in weighted total), note in report as "E2E skipped: server startup failed"
+- **E2E: No browser tools installed**: E2E score = null, note as "E2E skipped: no browser tool available"
+- **E2E: No frontend detected**: E2E score = null, note as "E2E skipped: no frontend detected"
+- **E2E: Browser-qa agent timeout**: Partial results still count; timed-out stories scored as FAIL
+- **E2E: All stories fail**: E2E score = 0, all journey failures reported as issues
 
 ## Token Budget
 
-| Phase | Single (Claude) | Single (Codex/Gemini) | Multi-Model |
-|-------|------------------|-----------------------|-------------|
-| Phase 0 (mode select) | ~0.5K | ~0.5K | ~0.5K |
-| Phase 1 (scan) | ~2K | ~2K | ~2K |
-| Phase 2 (dispatch) | ~60-90K | ~1K (prompts only) | ~60-90K (Claude) + external |
-| Phase 3 (synthesis) | ~5K | ~5K | ~15K (with synthesis agent) |
-| Phase 4 (export) | ~2K | ~2K | ~2K |
-| **Total** | **~70-100K** | **~10-12K** + external | **~80-110K** + external |
+| Phase | Single (Claude) | Single (Codex/Gemini) | Multi-Model | With E2E |
+|-------|------------------|-----------------------|-------------|----------|
+| Phase 0 (mode select) | ~0.5K | ~0.5K | ~0.5K | ~0.5K |
+| Phase 1 (scan) | ~2K | ~2K | ~2K | ~2K |
+| Phase 2 (dispatch) | ~60-90K | ~1K (prompts only) | ~60-90K (Claude) + external | +~27K per story |
+| Phase 3 (synthesis) | ~5K | ~5K | ~15K (with synthesis agent) | +~5K |
+| Phase 4 (export) | ~2K | ~2K | ~2K | ~2K |
+| **Total** | **~70-100K** | **~10-12K** + external | **~80-110K** + external | **+~80-160K** (E2E) |
 
-Note: Codex and Gemini token costs are on their respective API accounts, not the Claude context window.
+Note: Codex and Gemini token costs are on their respective API accounts, not the Claude context window. E2E token costs scale with number of stories (3-8 stories x ~27K each via playwright-cli).
 
 ## Notes
 
-- This is a READ-ONLY review. No files are modified.
+- This is a READ-ONLY review. No files are modified (including E2E -- no self-healing).
 - Use TodoWrite to track progress through all 5 phases (0-4).
 - All issues must include specific file paths and line numbers.
 - The confidence >= 80 threshold prevents false positives.
 - The export goes to: `C:\Users\RonKlatt_3qsjg34\Desktop\Claude Code Plugin Output\Code_Reviews\`
 - Multi-model mode dispatches reviews to Claude, Codex CLI, and Gemini CLI in parallel for cross-model validation.
 - External CLI costs (Codex, Gemini) are billed to their respective API accounts, not to the Claude context budget.
-- Single/claude mode is identical to v1.0 behavior -- full backward compatibility is preserved.
+- Single/claude mode without --e2e is identical to v2.0 behavior -- full backward compatibility is preserved.
 - In multi-model mode, consensus findings (2-3 models agree) have boosted confidence and are prioritized in recommendations.
+- E2E validation is opt-in (--e2e flag) because it requires a running server and adds significant time/tokens.
+- E2E is only dispatched to Claude in multi-model mode (Codex/Gemini CLIs cannot control browsers).
+- When E2E is included, dimension weights are rebalanced (15/15/20/10/10/10/20) to give E2E 20% weight.
+- E2E screenshots are stored in `./e2e-screenshots/` and referenced in the HTML/PDF/MD exports.
 - The multi-model-synthesizer agent handles all cross-model merging, deduplication, and consensus scoring.
