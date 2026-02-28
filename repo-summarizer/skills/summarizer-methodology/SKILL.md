@@ -2,19 +2,17 @@
 name: summarizer-methodology
 description: |
   Detailed scoring formulas, gap classification taxonomy, and maturity
-  assessment methodology for the repo-summarizer plugin v1.1. Includes
-  semantic analysis signals (implementation depth, test runner data,
-  integration chains, recency), floor rules, and the handoff/gap split.
-  Load on-demand when you need to understand how scores are calculated.
+  assessment methodology for the repo-summarizer plugin. Load on-demand
+  when you need to understand how scores are calculated.
 triggers:
   - "summarizer methodology"
   - "maturity scoring"
   - "repo scoring formula"
-version: 1.1
+version: 1.0
 author: ROK Agency
 ---
 
-# Repo Summarizer Methodology (v1.1)
+# Repo Summarizer Methodology
 
 ## Maturity Score Formula
 
@@ -40,23 +38,12 @@ Source: purpose-analyzer readme_quality.score
 - Default if missing: 30
 
 ### Feature Completeness (30%)
-Source: feature-enumerator status_breakdown + implementation_depth
-
-**Base formula**:
+Source: feature-enumerator status_breakdown
 ```
 score = (complete * 100 + partial * 50 + stub * 15 + planned * 0) / total
 ```
-
-**Depth verification (v1.1)**:
-- For each "complete" feature: verify `has_io_operations=true` AND `avg_handler_loc>=20`
-  - If not -> treat as partial for scoring
-- For each "stub" feature: if `recency_signal=="active"` with 10+ recent changes
-  - Treat as partial for scoring (actively being built)
-
-**Bonuses**:
-- +5 if has_tests_percentage > 60
-- +5 if has_api_percentage > 70
-- +5 if complete_chains / total_traced > 0.7 (chain bonus)
+- Bonus +5 if has_tests_percentage > 60
+- Bonus +5 if has_api_percentage > 70
 - Default if missing: 50
 
 ### Infrastructure (20%)
@@ -71,24 +58,9 @@ score = (complete_items * 10) + (partial_items * 5)
 - Default if missing: 50
 
 ### Test Presence (15%)
-
-**Primary signal (v1.1) -- Phase 1 test runner data**:
-```
-if test_results.total_tests > 0:
-    base = min(100, (passed / total) * 100)
-    volume_bonus = min(20, total_tests / 5)
-    score = min(100, base + volume_bonus)
-else:
-    Fall back to feature enumerator has_tests_percentage
-```
-
-**Adjustments**:
-- +10 if CI/CD detected with test step
-- +5 if total_test_cases > 50
-- +5 if features_with_mapped_tests / total_features > 0.5
-
-**Floor rule**: If Phase 1 shows 100+ passing tests with 90%+ pass rate, score CANNOT be below 70.
-
+Source: feature-enumerator coverage_assessment.has_tests_percentage
+- Direct percentage (0-100)
+- Bonus +10 if CI/CD detected
 - Default if missing: 0
 
 ### Architecture Clarity (20%)
@@ -109,55 +81,6 @@ Source: architecture-mapper
 | >= 60 | DEVELOPING | Amber | Core features work, needs polish |
 | >= 40 | EARLY STAGE | Blue | Functional prototype, significant gaps |
 | < 40 | PROTOTYPE | Purple | Initial implementation, many stubs |
-
-## Semantic Analysis Signals (v1.1)
-
-### Implementation Depth
-For each feature's handlers, the feature-enumerator reads function bodies:
-- **STUB**: 0-5 meaningful LOC + placeholder returns (501, pass, throw)
-- **PARTIAL**: 6-20 meaningful LOC + basic logic
-- **COMPLETE**: 20+ meaningful LOC + I/O operations (DB, HTTP, file)
-
-Key checks:
-- Import/usage verification (imported != used)
-- Scaffold detection (50+ LOC of type exports with no logic = stub)
-- I/O operation presence (DB queries, HTTP calls, file ops)
-
-### Integration Chains
-Architecture-mapper traces 5-10 feature chains:
-```
-entry_point -> validation -> service -> data_layer -> response
-```
-- Complete chain: entry_point + (validation OR processing) + data_layer + response
-- Broken chain: any layer stubs out or is missing
-
-Cross-reference with feature status:
-- Chain complete + feature "stub" -> override to "partial" minimum
-- Chain broken + feature "complete" -> downgrade to "partial"
-
-### Recency Signals
-From git log (last 30 days):
-- `active`: File changed in last 30 days
-- `stable`: Unchanged but complete
-- `stale`: Unchanged and incomplete
-
-### Test Mapping
-Test files mapped to features by imports, naming conventions, descriptions.
-Coverage metrics per feature: test_file_count, test_case_count, test_files[].
-
-## Output Documents (v1.1 Split)
-
-### Handoff Brief (Evergreen)
-Stays useful for months. Contains:
-- Quick start, navigation, purpose, architecture, feature map
-- Key decisions, integration points, conventions
-
-### Gap Analysis (Time-Sensitive)
-Goes stale in ~2 weeks. Contains:
-- Current maturity score, test status
-- Critical/high gaps, infrastructure status
-- Feature completion with depth/recency/chain signals
-- Recommendations
 
 ## Gap Classification Taxonomy
 

@@ -51,42 +51,7 @@ Trace data from user input to database and back:
 4. **Storage**: Where is data persisted?
 5. **Response**: How is data returned to the user?
 
-### 4. Trace Integration Chains (v1.1)
-
-For 5-10 of the most important features (prioritize by user-facing impact), trace the full integration chain from entry point to data layer:
-
-```
-entry_point (route/handler) -> validation -> service/business logic -> data layer (DB) -> response
-```
-
-For each chain:
-1. Start at the route/handler file
-2. Follow imports to find validation (Zod schemas, joi, class-validator, etc.)
-3. Follow calls to service/business logic functions
-4. Follow service calls to data layer (ORM queries, raw SQL, external API calls)
-5. Check that the response is properly constructed
-
-Record each chain as:
-```json
-{
-  "feature_area": "User Management",
-  "chain": [
-    {"layer": "route", "file": "src/app/api/users/route.ts"},
-    {"layer": "validation", "file": "src/lib/schemas/user.ts"},
-    {"layer": "service", "file": "src/lib/services/users.ts"},
-    {"layer": "data", "model": "User"}
-  ],
-  "chain_complete": true,
-  "missing_layers": []
-}
-```
-
-A chain is **complete** if: entry_point + (validation OR processing) + data_layer + response.
-A chain is **broken** if any layer stubs out, is missing, or returns a placeholder.
-
-Output summary: `total_traced`, `complete_chains`, `broken_chains`, `common_missing_layer`.
-
-### 5. Identify Key Files
+### 4. Identify Key Files
 The 10-20 most important files for understanding the codebase:
 - Main entry point
 - Core configuration
@@ -97,19 +62,19 @@ The 10-20 most important files for understanding the codebase:
 - Key business logic modules
 - Environment configuration
 
-### 6. Map External Integrations
+### 5. Map External Integrations
 - Third-party API calls (fetch/axios to external URLs)
 - SDK imports (Stripe, SendGrid, Twilio, AWS SDK)
 - Database connections
 - Message queues, webhooks
 - OAuth providers
 
-### 7. State Management
+### 6. State Management
 - Client-side: Redux store, Zustand stores, Context providers, Jotai atoms
 - Server-side: Session management, cache layers, in-memory stores
 - Database: Which ORM, connection pooling, transactions
 
-### 8. Configuration Patterns
+### 7. Configuration Patterns
 - Environment variables: How managed, validated?
 - Feature flags: Any feature flag system?
 - Constants: Where are magic numbers/strings defined?
@@ -185,25 +150,6 @@ Return ONLY this JSON structure:
     "path_aliases": "@ -> src/ (tsconfig.json)",
     "feature_flags": "none detected",
     "constants": "src/lib/constants.ts"
-  },
-  "integration_chains": {
-    "total_traced": 8,
-    "complete_chains": 6,
-    "broken_chains": 2,
-    "common_missing_layer": "validation",
-    "chains": [
-      {
-        "feature_area": "User Management",
-        "chain": [
-          {"layer": "route", "file": "src/app/api/users/route.ts"},
-          {"layer": "validation", "file": "src/lib/schemas/user.ts"},
-          {"layer": "service", "file": "src/lib/services/users.ts"},
-          {"layer": "data", "model": "User"}
-        ],
-        "chain_complete": true,
-        "missing_layers": []
-      }
-    ]
   },
   "monorepo": {
     "is_monorepo": false,

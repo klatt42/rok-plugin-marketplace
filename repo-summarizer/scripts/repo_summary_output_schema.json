@@ -7,11 +7,6 @@
       "type": "string",
       "const": "repo_summary"
     },
-    "version": {
-      "type": "string",
-      "description": "Schema version. '1.0' for original, '1.1' for semantic analysis upgrade.",
-      "default": "1.0"
-    },
     "mode": {
       "type": "string",
       "enum": ["single", "suite"]
@@ -85,42 +80,6 @@
           "related_gaps": {
             "type": "array",
             "items": { "type": "string" }
-          },
-          "implementation_depth": {
-            "type": "object",
-            "description": "v1.1: Semantic analysis of implementation quality",
-            "properties": {
-              "avg_handler_loc": { "type": "integer" },
-              "has_io_operations": { "type": "boolean" },
-              "imports_used": { "type": "boolean" },
-              "has_error_handling": { "type": "boolean" }
-            }
-          },
-          "test_coverage": {
-            "type": "object",
-            "description": "v1.1: Mapped test coverage for this feature",
-            "properties": {
-              "test_file_count": { "type": "integer" },
-              "test_case_count": { "type": "integer" },
-              "test_files": {
-                "type": "array",
-                "items": { "type": "string" }
-              }
-            }
-          },
-          "recency_signal": {
-            "type": "string",
-            "description": "v1.1: Git recency indicator",
-            "enum": ["active", "stable", "stale"]
-          },
-          "recently_active": {
-            "type": "boolean",
-            "description": "v1.1: Whether key files changed in last 30 days"
-          },
-          "chain_status": {
-            "type": "string",
-            "description": "v1.1: Integration chain completeness for this feature",
-            "enum": ["complete", "broken", "not_traced"]
           }
         }
       }
@@ -133,19 +92,7 @@
         "complete": { "type": "integer" },
         "partial": { "type": "integer" },
         "stub": { "type": "integer" },
-        "planned": { "type": "integer" },
-        "total_test_files": {
-          "type": "integer",
-          "description": "v1.1: Total test files mapped to features"
-        },
-        "total_test_cases": {
-          "type": "integer",
-          "description": "v1.1: Total test cases mapped to features"
-        },
-        "features_with_mapped_tests": {
-          "type": "integer",
-          "description": "v1.1: Features with at least one mapped test"
-        }
+        "planned": { "type": "integer" }
       }
     },
     "stack": {
@@ -240,87 +187,6 @@
     },
     "handoff_brief": { "type": "string" },
     "executive_summary": { "type": "string" },
-    "test_results": {
-      "type": "object",
-      "description": "v1.1: Phase 1 test runner execution results",
-      "properties": {
-        "runner": { "type": "string" },
-        "total_tests": { "type": "integer" },
-        "passed_tests": { "type": "integer" },
-        "failed_tests": { "type": "integer" },
-        "skipped_tests": { "type": "integer" },
-        "pass_rate": { "type": "number", "minimum": 0, "maximum": 1 },
-        "test_files_count": { "type": "integer" },
-        "error": { "type": ["string", "null"] }
-      }
-    },
-    "recency_data": {
-      "type": "object",
-      "description": "v1.1: Git recency data from last 30 days",
-      "properties": {
-        "recently_active_files": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "file": { "type": "string" },
-              "change_count": { "type": "integer" }
-            }
-          }
-        },
-        "recently_active_dirs": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "directory": { "type": "string" },
-              "change_count": { "type": "integer" }
-            }
-          }
-        },
-        "total_recent_commits": { "type": "integer" },
-        "recency_window": { "type": "string" }
-      }
-    },
-    "integration_chains": {
-      "type": "object",
-      "description": "v1.1: Feature integration chain tracing results",
-      "properties": {
-        "total_traced": { "type": "integer" },
-        "complete_chains": { "type": "integer" },
-        "broken_chains": { "type": "integer" },
-        "common_missing_layer": { "type": "string" },
-        "chains": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "feature_area": { "type": "string" },
-              "chain": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "layer": { "type": "string" },
-                    "file": { "type": "string" },
-                    "model": { "type": "string" }
-                  }
-                }
-              },
-              "chain_complete": { "type": "boolean" },
-              "missing_layers": {
-                "type": "array",
-                "items": { "type": "string" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "gap_analysis": {
-      "type": "string",
-      "description": "v1.1: Standalone gap analysis markdown document (time-sensitive, separate from handoff brief)"
-    },
     "suite_context": {
       "type": ["object", "null"],
       "properties": {
