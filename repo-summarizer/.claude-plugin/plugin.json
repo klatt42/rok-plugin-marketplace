@@ -1,0 +1,8 @@
+{
+  "name": "repo-summarizer",
+  "version": "1.1.0",
+  "description": "Deep codebase analysis producing comprehensive handoff documents for CC sessions. Analyzes purpose, features, tech stack, gaps, and architecture across single repos or multi-repo suites. Exports scored reports with maturity assessment to MD, PDF, and HTML.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

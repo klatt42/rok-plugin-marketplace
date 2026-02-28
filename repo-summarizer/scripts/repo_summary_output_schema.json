@@ -1,0 +1,351 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["type", "mode", "project_name", "project_path", "date", "maturity_level", "maturity_score", "dimension_scores", "purpose", "features", "feature_summary", "stack", "gaps", "gap_summary", "architecture", "infrastructure_checklist", "recommendations", "handoff_brief", "executive_summary"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "repo_summary"
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version. '1.0' for original, '1.1' for semantic analysis upgrade.",
+      "default": "1.0"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["single", "suite"]
+    },
+    "project_name": { "type": "string" },
+    "project_path": { "type": "string" },
+    "repo_url": { "type": "string" },
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "maturity_level": {
+      "type": "string",
+      "enum": ["MATURE", "DEVELOPING", "EARLY_STAGE", "PROTOTYPE"]
+    },
+    "maturity_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "dimension_scores": {
+      "type": "object",
+      "required": ["documentation", "feature_completeness", "infrastructure", "test_presence", "architecture_clarity"],
+      "properties": {
+        "documentation": { "$ref": "#/$defs/dimension_score" },
+        "feature_completeness": { "$ref": "#/$defs/dimension_score" },
+        "infrastructure": { "$ref": "#/$defs/dimension_score" },
+        "test_presence": { "$ref": "#/$defs/dimension_score" },
+        "architecture_clarity": { "$ref": "#/$defs/dimension_score" }
+      }
+    },
+    "purpose": {
+      "type": "object",
+      "properties": {
+        "statement": { "type": "string" },
+        "extended": { "type": "string" },
+        "project_type": { "type": "string" },
+        "target_users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "persona": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "deployment_model": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "platform": { "type": "string" }
+          }
+        }
+      }
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "category", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["complete", "partial", "stub", "planned"]
+          },
+          "completeness": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "has_tests": { "type": "boolean" },
+          "has_ui": { "type": "boolean" },
+          "has_api": { "type": "boolean" },
+          "related_gaps": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "implementation_depth": {
+            "type": "object",
+            "description": "v1.1: Semantic analysis of implementation quality",
+            "properties": {
+              "avg_handler_loc": { "type": "integer" },
+              "has_io_operations": { "type": "boolean" },
+              "imports_used": { "type": "boolean" },
+              "has_error_handling": { "type": "boolean" }
+            }
+          },
+          "test_coverage": {
+            "type": "object",
+            "description": "v1.1: Mapped test coverage for this feature",
+            "properties": {
+              "test_file_count": { "type": "integer" },
+              "test_case_count": { "type": "integer" },
+              "test_files": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "recency_signal": {
+            "type": "string",
+            "description": "v1.1: Git recency indicator",
+            "enum": ["active", "stable", "stale"]
+          },
+          "recently_active": {
+            "type": "boolean",
+            "description": "v1.1: Whether key files changed in last 30 days"
+          },
+          "chain_status": {
+            "type": "string",
+            "description": "v1.1: Integration chain completeness for this feature",
+            "enum": ["complete", "broken", "not_traced"]
+          }
+        }
+      }
+    },
+    "feature_summary": {
+      "type": "object",
+      "required": ["total", "complete", "partial", "stub", "planned"],
+      "properties": {
+        "total": { "type": "integer" },
+        "complete": { "type": "integer" },
+        "partial": { "type": "integer" },
+        "stub": { "type": "integer" },
+        "planned": { "type": "integer" },
+        "total_test_files": {
+          "type": "integer",
+          "description": "v1.1: Total test files mapped to features"
+        },
+        "total_test_cases": {
+          "type": "integer",
+          "description": "v1.1: Total test cases mapped to features"
+        },
+        "features_with_mapped_tests": {
+          "type": "integer",
+          "description": "v1.1: Features with at least one mapped test"
+        }
+      }
+    },
+    "stack": {
+      "type": "object",
+      "properties": {
+        "primary_language": { "type": "string" },
+        "framework": { "type": "string" },
+        "database": { "type": "string" },
+        "deployment": { "type": "string" },
+        "key_dependencies": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "severity", "title", "recommendation"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["missing_feature", "incomplete_implementation", "infrastructure_gap", "ux_gap", "todo_marker", "documentation_gap", "security_gap"]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+          },
+          "title": { "type": "string" },
+          "recommendation": { "type": "string" },
+          "effort_estimate": {
+            "type": "string",
+            "enum": ["small", "medium", "large"]
+          }
+        }
+      }
+    },
+    "gap_summary": {
+      "type": "object",
+      "required": ["critical", "high", "medium", "low", "total"],
+      "properties": {
+        "critical": { "type": "integer" },
+        "high": { "type": "integer" },
+        "medium": { "type": "integer" },
+        "low": { "type": "integer" },
+        "total": { "type": "integer" }
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "properties": {
+        "style": { "type": "string" },
+        "pattern": { "type": "string" },
+        "key_files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string" },
+              "role": { "type": "string" },
+              "importance": { "type": "string" }
+            }
+          }
+        },
+        "navigation_tips": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "data_flow": { "type": "string" }
+      }
+    },
+    "infrastructure_checklist": {
+      "type": "object",
+      "properties": {
+        "error_handling": { "$ref": "#/$defs/quality_status" },
+        "logging": { "$ref": "#/$defs/quality_status" },
+        "input_validation": { "$ref": "#/$defs/quality_status" },
+        "rate_limiting": { "$ref": "#/$defs/quality_status" },
+        "health_check": { "$ref": "#/$defs/quality_status" },
+        "cors": { "$ref": "#/$defs/quality_status" },
+        "env_config": { "$ref": "#/$defs/quality_status" },
+        "ci_cd": { "$ref": "#/$defs/quality_status" },
+        "migrations": { "$ref": "#/$defs/quality_status" },
+        "secrets": { "$ref": "#/$defs/quality_status" }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "handoff_brief": { "type": "string" },
+    "executive_summary": { "type": "string" },
+    "test_results": {
+      "type": "object",
+      "description": "v1.1: Phase 1 test runner execution results",
+      "properties": {
+        "runner": { "type": "string" },
+        "total_tests": { "type": "integer" },
+        "passed_tests": { "type": "integer" },
+        "failed_tests": { "type": "integer" },
+        "skipped_tests": { "type": "integer" },
+        "pass_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "test_files_count": { "type": "integer" },
+        "error": { "type": ["string", "null"] }
+      }
+    },
+    "recency_data": {
+      "type": "object",
+      "description": "v1.1: Git recency data from last 30 days",
+      "properties": {
+        "recently_active_files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "file": { "type": "string" },
+              "change_count": { "type": "integer" }
+            }
+          }
+        },
+        "recently_active_dirs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "directory": { "type": "string" },
+              "change_count": { "type": "integer" }
+            }
+          }
+        },
+        "total_recent_commits": { "type": "integer" },
+        "recency_window": { "type": "string" }
+      }
+    },
+    "integration_chains": {
+      "type": "object",
+      "description": "v1.1: Feature integration chain tracing results",
+      "properties": {
+        "total_traced": { "type": "integer" },
+        "complete_chains": { "type": "integer" },
+        "broken_chains": { "type": "integer" },
+        "common_missing_layer": { "type": "string" },
+        "chains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "feature_area": { "type": "string" },
+              "chain": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "layer": { "type": "string" },
+                    "file": { "type": "string" },
+                    "model": { "type": "string" }
+                  }
+                }
+              },
+              "chain_complete": { "type": "boolean" },
+              "missing_layers": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gap_analysis": {
+      "type": "string",
+      "description": "v1.1: Standalone gap analysis markdown document (time-sensitive, separate from handoff brief)"
+    },
+    "suite_context": {
+      "type": ["object", "null"],
+      "properties": {
+        "repos_analyzed": { "type": "array", "items": { "type": "string" } },
+        "shared_dependencies": { "type": "array" },
+        "version_mismatches": { "type": "array" },
+        "api_contracts": { "type": "array" },
+        "shared_models": { "type": "array" },
+        "integration_gaps": { "type": "array", "items": { "type": "string" } },
+        "cross_repo_recommendations": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "dimension_score": {
+      "type": "object",
+      "required": ["score", "weight"],
+      "properties": {
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "quality_status": {
+      "type": "string",
+      "enum": ["complete", "partial", "missing"]
+    }
+  }
+}
