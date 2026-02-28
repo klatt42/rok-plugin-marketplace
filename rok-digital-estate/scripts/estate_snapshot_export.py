@@ -113,6 +113,13 @@ def latin_safe(s: str) -> str:
     return s.encode("latin-1", errors="replace").decode("latin-1")
 
 
+def strip_git_suffix(url: str) -> str:
+    s = url.replace("https://github.com/", "")
+    if s.endswith(".git"):
+        s = s[:-4]
+    return s
+
+
 def format_cost(amount):
     try:
         return f"${float(amount):,.2f}"
@@ -170,19 +177,38 @@ def generate_estate_html(data: dict, output_path: str):
             </tr>"""
         return rows
 
-    # Project inventory rows
-    proj_rows = ""
+    # Project inventory cards
+    proj_cards = ""
     for i, p in enumerate(projects, 1):
-        proj_rows += f"""
-        <tr>
-          <td style="text-align:center">{i}</td>
-          <td style="font-weight:600">{escape_html(p.get('name', ''))}</td>
-          <td style="text-align:center">{status_badge_html(p.get('status', ''))}</td>
-          <td style="font-size:11px">{escape_html(', '.join(p.get('tech_stack', [])))}</td>
-          <td style="font-size:11px;font-family:monospace">{escape_html(p.get('local_path', ''))}</td>
-          <td style="font-size:11px">{escape_html(p.get('deployment_url', '') or 'none')}</td>
-          <td style="font-size:11px">{escape_html(p.get('last_activity', ''))}</td>
-        </tr>"""
+        desc = escape_html(p.get('description', ''))
+        repo_url = p.get('repo_url', '')
+        repo_display = strip_git_suffix(repo_url) if repo_url else ''
+        provider = p.get('deployment_provider') or ''
+        dirty = p.get('is_dirty', False)
+        dirty_count = p.get('dirty_count', 0)
+        dirty_html = f'<span style="color:#DC2626;font-weight:600;font-size:11px">Dirty ({dirty_count})</span>' if dirty else '<span style="color:#059669;font-size:11px">Clean</span>'
+        provider_html = f'<span style="display:inline-block;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:600;background:#DBEAFE;color:#1E40AF">{escape_html(provider)}</span>' if provider else ''
+        repo_html = f'<a href="{escape_html(repo_url)}" style="color:{AMBER};font-size:11px;text-decoration:none">{escape_html(repo_display)}</a>' if repo_url else '<span style="font-size:11px;color:#6B7280">no repo</span>'
+        deploy_url = p.get('deployment_url', '') or ''
+        deploy_html = f'<a href="{escape_html(deploy_url)}" style="color:{AMBER};font-size:11px;text-decoration:none">{escape_html(deploy_url)}</a>' if deploy_url else ''
+
+        proj_cards += f"""
+        <div style="border:1px solid #E2E8F0;border-radius:8px;margin-bottom:10px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#F8FAFC;flex-wrap:wrap">
+            <span style="font-size:12px;color:{TEXT_MUTED};min-width:24px;text-align:center">{i}</span>
+            <span style="font-weight:700;color:{SLATE}">{escape_html(p.get('name', ''))}</span>
+            {status_badge_html(p.get('status', ''))}
+            <span style="font-size:11px;color:{TEXT_MUTED}">{escape_html(', '.join(p.get('tech_stack', [])))}</span>
+            <span style="margin-left:auto;font-size:11px;color:{TEXT_MUTED}">{escape_html(p.get('last_activity', ''))}</span>
+          </div>
+          <div style="padding:8px 14px;font-size:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-top:1px solid #F1F5F9">
+            <span style="color:{TEXT_MUTED};font-style:italic;flex:1;min-width:200px">{desc or 'No description'}</span>
+            {repo_html}
+            {provider_html}
+            {dirty_html}
+          </div>
+          {'<div style="padding:4px 14px 8px;font-size:11px"><span style="color:' + TEXT_MUTED + '">Deploy: </span>' + deploy_html + '</div>' if deploy_url else ''}
+        </div>"""
 
     # Deployment rows
     deploy_rows = ""
@@ -393,10 +419,7 @@ def generate_estate_html(data: dict, output_path: str):
 <!-- 3. Project Inventory -->
 <div class="section">
   <h2>3. Project Inventory</h2>
-  <table>
-    <tr><th>#</th><th>Project</th><th>Status</th><th>Tech Stack</th><th>Local Path</th><th>Deployment</th><th>Last Activity</th></tr>
-    {proj_rows}
-  </table>
+  {proj_cards}
   <h3>Cross-Reference Notes</h3>
   <ul style="font-size:13px;color:{TEXT_MUTED};padding-left:20px">
     <li><strong>Orphan repos</strong> (GitHub only): {', '.join((r if isinstance(r, str) else r.get('name', '')) for r in cross_ref.get('orphan_repos', [])) or 'None'}</li>
@@ -612,12 +635,29 @@ def generate_estate_pdf(data: dict, output_path: str):
     # 3. Project Inventory
     pdf.section_title("3. Project Inventory")
     if projects:
-        rows = [[p.get("name", "")[:30], p.get("status", "").upper(),
-                  ", ".join(p.get("tech_stack", []))[:30],
-                  (p.get("deployment_url") or "none")[:40],
+        rows = [[p.get("name", "")[:25], p.get("status", "").upper(),
+                  ", ".join(p.get("tech_stack", []))[:25],
+                  (p.get("deployment_provider") or "-")[:10],
+                  "Dirty" if p.get("is_dirty") else "Clean",
                   p.get("last_activity", "") or ""] for p in projects]
-        pdf.add_table(["Project", "Status", "Stack", "Deployment", "Last Activity"], rows,
-                     [40, 22, 40, 55, 33])
+        pdf.add_table(["Project", "Status", "Stack", "Provider", "Git", "Last Activity"], rows,
+                     [38, 20, 38, 22, 18, 30])
+
+        # Add description + repo URL detail lines per project
+        for p in projects:
+            desc = p.get("description", "")
+            repo_url = strip_git_suffix(p.get("repo_url") or "")
+            if desc or repo_url:
+                if pdf.get_y() > 270:
+                    pdf.add_page()
+                pdf.set_font("Helvetica", "I", 7)
+                pdf.set_text_color(100, 116, 139)
+                detail = latin_safe(p.get("name", ""))
+                if desc:
+                    detail += f" -- {latin_safe(desc[:80])}"
+                if repo_url:
+                    detail += f" | {latin_safe(repo_url)}"
+                pdf.cell(0, 4, detail, ln=True)
 
     # 6. Subscriptions & Costs
     subs = cost_summary.get("subscriptions", [])
@@ -725,11 +765,36 @@ def generate_estate_md(data: dict, output_path: str):
 
         # 3. Project Inventory
         lines.append("## 3. Project Inventory")
-        lines.append("| # | Project | Status | Tech Stack | Deployment | Last Activity |")
-        lines.append("|---|---------|--------|------------|------------|---------------|")
-        for i, p in enumerate(projects, 1):
-            lines.append(f"| {i} | {p.get('name', '')} | {p.get('status', '').upper()} | {', '.join(p.get('tech_stack', []))} | {p.get('deployment_url', 'none')} | {p.get('last_activity', '')} |")
         lines.append("")
+        lines.append("| # | Project | Status | Tech Stack | Provider | Git | Last Activity |")
+        lines.append("|---|---------|--------|------------|----------|-----|---------------|")
+        for i, p in enumerate(projects, 1):
+            provider = p.get('deployment_provider') or '-'
+            git_status = 'Dirty' if p.get('is_dirty') else 'Clean'
+            lines.append(f"| {i} | {p.get('name', '')} | {p.get('status', '').upper()} | {', '.join(p.get('tech_stack', []))} | {provider} | {git_status} | {p.get('last_activity', '')} |")
+        lines.append("")
+
+        # Project Details subsection
+        lines.append("### Project Details")
+        lines.append("")
+        for p in projects:
+            desc = p.get('description', '')
+            repo_url = p.get('repo_url', '')
+            deploy_url = p.get('deployment_url', '')
+            provider = p.get('deployment_provider', '')
+            dirty = 'Dirty' if p.get('is_dirty') else 'Clean'
+            name = p.get('name', '')
+            detail_parts = []
+            if provider:
+                detail_parts.append(provider)
+            detail_parts.append(dirty)
+            if deploy_url:
+                detail_parts.append(deploy_url)
+            lines.append(f"**{name}**{' - ' + desc if desc else ''}")
+            repo_display = strip_git_suffix(repo_url) if repo_url else 'no repo'
+            lines.append(f"- Repo: {repo_display} | {' | '.join(detail_parts)}")
+            lines.append("")
+
         lines.append("---")
         lines.append("")
 

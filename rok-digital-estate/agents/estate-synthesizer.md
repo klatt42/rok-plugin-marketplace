@@ -30,6 +30,8 @@ For each local project:
 
 Result: unified `projects[]` array where each entry has all available data from all sources.
 
+For `description`: prefer GitHub repo description. If empty, use the first non-empty line from CLAUDE.md or README.md found locally.
+
 Flag:
 - **Orphan repos**: On GitHub but no local clone
 - **Local only**: Local project with no GitHub remote
@@ -113,6 +115,7 @@ Return ONLY valid JSON (no markdown wrapping):
   "unified_projects": [
     {
       "name": "project-name",
+      "description": "Short project description from GitHub or CLAUDE.md/README",
       "status": "active",
       "tech_stack": ["Node.js", "Next.js"],
       "local_path": "/home/klatt42/projects/project-name",
