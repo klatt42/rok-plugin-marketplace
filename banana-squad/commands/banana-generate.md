@@ -6,7 +6,7 @@ Quick image generation that skips clarifying questions. Provide your prompt dire
 
 ```
 /banana-squad:banana-generate "A photorealistic close-up of fresh strawberries on a rustic wooden table, morning golden hour light" --aspect=16:9 --resolution=2K
-/banana-squad:banana-generate "Minimalist tech startup logo with geometric shapes in blue and white" --aspect=1:1
+/banana-squad:banana-generate "Minimalist tech startup logo with geometric shapes in blue and white" --aspect=1:1 --variants=3
 /banana-squad:banana-generate "Dark moody product photo of a luxury watch" --refs=/path/to/ref.png --aspect=4:5 --resolution=4K
 ```
 
@@ -16,6 +16,7 @@ Quick image generation that skips clarifying questions. Provide your prompt dire
 - **--refs** (optional): Comma-separated paths to reference images
 - **--aspect** (optional): Aspect ratio (default: 16:9)
 - **--resolution** (optional): Resolution (default: 2K)
+- **--variants** (optional): Number of variants (1-5, default: 5). Fewer = faster + cheaper.
 
 Initial request: $ARGUMENTS
 
@@ -36,6 +37,7 @@ Extract from `$ARGUMENTS`:
 - **--refs=**: Comma-split into reference image paths
 - **--aspect=**: Aspect ratio (default 16:9)
 - **--resolution=**: Resolution (default 2K)
+- **--variants=**: Number of variants (default 5, must be 1-5)
 
 If no prompt text is found, display:
 ```
@@ -69,14 +71,15 @@ Same as `/banana-squad:banana-squad` Phase 2:
 Same as `/banana-squad:banana-squad` Phase 3:
 - Read `agents/prompt-architect.md` and `references/prompting-best-practices.md`
 - Launch Prompt Architect with user's prompt as the primary input
-- The user's prompt becomes the basis for v1 (Faithful), with v2-v5 as creative variations
-- Collect 5 prompts JSON
+- Pass `--variants` count (the user's prompt becomes the basis for v1 Faithful, with v2-vN as creative variations)
+- Collect prompts JSON (1-5 prompts based on variants setting)
 
 ### Phase 4: Generator Agent
 
 Same as `/banana-squad:banana-squad` Phase 4:
 - Read `agents/generator-agent.md`
-- Launch Generator Agent with 5 prompts, script path, output directory
+- Launch Generator Agent with prompts, **both script paths** (generate_image.py + generate_batch.py), output directory
+- Uses parallel generation via `generate_batch.py` (default 3 concurrent workers)
 - Collect generation results JSON
 
 ### Phase 5: Critic Agent
@@ -86,9 +89,16 @@ Same as `/banana-squad:banana-squad` Phase 5:
 - Launch Critic Agent with generated image paths and original prompt
 - Collect critique results JSON
 
-### Phase 6: Results Presentation
+### Phase 6: Save Session & Generate Gallery
 
-Same format as `/banana-squad:banana-squad` Phase 6.
+Same as `/banana-squad:banana-squad` Phase 6:
+- Save `session.json` to output directory (prompts, scores, rankings)
+- Run `generate_gallery.py --dir [output_dir]` to create `index.html`
+- Open gallery in browser
+
+### Phase 7: Results Presentation
+
+Same format as `/banana-squad:banana-squad` Phase 7.
 
 ## Plugin Paths
 
@@ -99,9 +109,23 @@ Agents: [plugin_root]/agents/
 References: [plugin_root]/skills/banana-squad/references/
 ```
 
+## Plugin Paths (Updated)
+
+```
+Plugin root: ~/.claude/plugins/marketplaces/rok-plugin-marketplace/banana-squad
+Scripts:
+  - generate_image.py  (single image generation)
+  - generate_batch.py  (parallel batch generation)
+  - generate_gallery.py (gallery HTML generator)
+Agents: [plugin_root]/agents/
+References: [plugin_root]/skills/banana-squad/references/
+```
+
 ## Rules
 
 - Do NOT ask clarifying questions — the user provided everything
 - If the prompt is too vague, still proceed (Prompt Architect will handle variation)
 - Same error handling as `/banana-squad:banana-squad`
-- Pipeline is sequential, `run_in_background: false`
+- Pipeline is sequential between phases, but image generation within Phase 4 is parallel
+- Use `run_in_background: false` for Task calls (phases are sequential)
+- Always save session.json and generate gallery after critique

@@ -8,6 +8,7 @@ Generate professional images using a 4-agent pipeline inspired by PaperBanana re
 /banana-squad:banana-squad Create a professional infographic about global coffee consumption
 /banana-squad:banana-squad --refs=/path/to/reference.png Create something in this style about AI investment
 /banana-squad:banana-squad A product photo of wireless earbuds --aspect=1:1 --resolution=4K
+/banana-squad:banana-squad A hero banner for SaaS landing page --variants=3 --aspect=16:9
 ```
 
 ## Arguments
@@ -16,6 +17,7 @@ Generate professional images using a 4-agent pipeline inspired by PaperBanana re
 - **--refs** (optional): Comma-separated paths to reference images
 - **--aspect** (optional): Aspect ratio (default: 16:9). Options: 1:1, 16:9, 9:16, 3:2, 2:3, 4:3, 3:4, 4:5, 5:4, 21:9
 - **--resolution** (optional): Resolution (default: 2K). Options: 1K, 2K, 4K (MUST be uppercase)
+- **--variants** (optional): Number of variants to generate (1-5, default: 5). Fewer variants = faster + cheaper.
 
 Initial request: $ARGUMENTS
 
@@ -71,6 +73,7 @@ Parse `$ARGUMENTS` for any inline flags:
 - Extract `--refs=` value (comma-split into list of paths)
 - Extract `--aspect=` value (default 16:9)
 - Extract `--resolution=` value (default 2K)
+- Extract `--variants=` value (default 5, must be 1-5)
 - Remaining text is the description
 
 **If description is empty or very brief (< 10 words)**, ask clarifying questions using AskUserQuestion or direct prompting:
@@ -168,11 +171,12 @@ User requirements:
 
 Aspect ratio: [value]
 Resolution: [value]
+Number of variants: [variants value, 1-5]
 
 Style brief from Research Agent:
 [paste style brief JSON from Phase 2, or "No reference images provided — use your best judgment for style"]
 
-Craft 5 distinct narrative image prompts following your instructions. Output as JSON.
+Craft [variants] distinct narrative image prompts following your instructions. Output as JSON.
 """
 )
 ```
@@ -204,6 +208,7 @@ You are the Generator Agent for the Banana Squad image generation pipeline.
 ## Your Task
 
 Script path: ~/.claude/plugins/marketplaces/rok-plugin-marketplace/banana-squad/scripts/generate_image.py
+Batch script path: ~/.claude/plugins/marketplaces/rok-plugin-marketplace/banana-squad/scripts/generate_batch.py
 
 Output directory: [output_dir]
 Concept slug: [slug]
@@ -212,11 +217,13 @@ Resolution: [value]
 
 Reference image paths: [list of paths, or "none"]
 
-Here are the 5 prompts to generate:
+Here are the [variants] prompts to generate:
 
 [Paste the full prompts JSON from Phase 3]
 
-Execute each generation, wait 3 seconds between calls, retry on failure. Report results as JSON.
+Use the batch script for parallel generation. Create a JSON manifest with all prompts, pipe it to generate_batch.py.
+The batch script handles retries and concurrency (default 3 workers) automatically.
+Report results as JSON.
 """
 )
 ```
@@ -258,7 +265,45 @@ Read each image file and evaluate on all 4 dimensions. Rank all images and recom
 
 Collect result via TaskOutput. This produces **critique results** JSON.
 
-### Phase 6: Results Presentation
+### Phase 6: Save Session & Generate Gallery
+
+**Step 1: Save session.json**
+
+After receiving critique results, save a `session.json` file in the output directory:
+
+```json
+{
+  "subject": "[concept slug]",
+  "prompt": "[user's original description]",
+  "aspect_ratio": "[value]",
+  "resolution": "[value]",
+  "variants": [number],
+  "timestamp": "[ISO timestamp]",
+  "critiques": [array from critic - each with path, scores, composite, review],
+  "ranking": [array from critic - ranked list],
+  "top_recommendation": {from critic},
+  "refinement_suggestions": [array from critic]
+}
+```
+
+Write this via the Write tool to `[output_directory]/session.json`.
+
+**Step 2: Generate gallery**
+
+```bash
+python3 ~/.claude/plugins/marketplaces/rok-plugin-marketplace/banana-squad/scripts/generate_gallery.py \
+  --dir "[output_directory]"
+```
+
+This creates `[output_directory]/index.html` — a self-contained gallery with embedded thumbnails, scores, and lightbox navigation.
+
+**Step 3: Open gallery in browser (WSL)**
+
+```bash
+cmd.exe /c start "" "$(wslpath -w '[output_directory]/index.html')"
+```
+
+### Phase 7: Results Presentation
 
 Parse the critique JSON and present to the user:
 
@@ -283,7 +328,8 @@ Parse the critique JSON and present to the user:
 - [suggestion 3]
 
 ### Output Location
-All images saved to: [output_directory]
+All [variants] images at: [output_directory]
+Gallery: [output_directory]/index.html (opened in browser)
 
 ---
 
@@ -309,7 +355,9 @@ What would you like to do next?
 
 - This is the orchestrator — coordinate agents but do NOT generate images yourself
 - Always wait for user confirmation before proceeding past Phase 1
-- Pipeline is sequential — each phase needs the previous phase's output
-- Use `run_in_background: false` for all Task calls (sequential pipeline)
+- Pipeline is sequential between phases — each phase needs the previous phase's output
+- Image generation within Phase 4 is parallel (via generate_batch.py)
+- Use `run_in_background: false` for all Task calls (phases are sequential)
+- Always save session.json and generate gallery index after critique
 - Present clear, formatted results to the user
 - Be transparent about failures — don't hide errors

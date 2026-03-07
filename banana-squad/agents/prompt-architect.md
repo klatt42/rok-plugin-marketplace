@@ -20,8 +20,9 @@ You will receive:
 1. The user's confirmed requirements (subject, style, mood, aspect ratio, resolution, etc.)
 2. A style brief from the Research Agent (if reference images were provided)
 3. The reference doc at `references/prompting-best-practices.md` (read it if provided in context)
+4. **Variant count** (1-5, default 5): How many prompt variants to generate
 
-Using these inputs, craft 5 distinct narrative prompts that explore different creative directions for the same concept.
+Using these inputs, craft the requested number of distinct narrative prompts that explore different creative directions for the same concept. When fewer than 5 variants are requested, include them in priority order: v1 (Faithful) first, then v2 (Enhanced), then v3-v5 in order.
 
 ## The 5 Variants
 

@@ -9,14 +9,18 @@
 
 "Nano Banana" is the codename for Gemini's **native image generation** capabilities. The model generates images as part of its normal `generateContent` response — there is no separate image API. Response parts can be `text` or `inline_data` (base64-encoded image).
 
-### Two Models
+### Models
 
 | Model | Model ID | Best For |
 |---|---|---|
-| **Nano Banana** | `gemini-2.5-flash-image` | Speed, efficiency, high-volume, low-latency. Fixed 1K resolution. Up to 3 input images. |
-| **Nano Banana Pro** | `gemini-3-pro-image-preview` | Professional asset production. Thinking mode. Up to 4K resolution. Google Search grounding. Up to 14 reference images. |
+| **Nano Banana Pro** (primary) | `gemini-3-pro-image-preview` | Professional asset production. Thinking mode. Up to 4K resolution. Google Search grounding. Up to 14 reference images. |
+| **Flash Fallback** | `gemini-2.0-flash-exp-image-generation` | Automatic fallback when Pro times out or returns empty. Faster but fixed ~1K resolution. Ignores `image_config` settings. |
+| **Nano Banana** | `gemini-2.5-flash-image` | Alternative flash model. Speed, efficiency, high-volume, low-latency. Fixed 1K resolution. Up to 3 input images. |
 
 **Default model for this project: `gemini-3-pro-image-preview`**
+**Automatic fallback: `gemini-2.0-flash-exp-image-generation`**
+
+> `generate_image.py` tries models in order and returns `model_used` in its JSON output. Large reference images (>1920px) are auto-resized before upload to prevent API timeouts.
 
 ---
 

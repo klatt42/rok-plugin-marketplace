@@ -1,0 +1,8 @@
+{
+  "name": "ui-polish-pro",
+  "version": "1.0.0",
+  "description": "Production-quality UI/UX overhaul pipeline. Audits existing apps for design inconsistencies, extracts/generates design token systems, then polishes routes with animations, spacing, typography, and accessibility — all on an isolated git branch preserving functionality. Works on full apps, landing pages, and websites.",
+  "author": {
+    "name": "ROK Agency"
+  }
+}

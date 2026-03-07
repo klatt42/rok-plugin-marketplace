@@ -169,6 +169,21 @@
       "name": "rok-digital-estate",
       "source": "./rok-digital-estate",
       "description": "Monthly digital estate snapshot for bus factor mitigation. Scans local projects, GitHub repos, deployments, Supabase memory, and infrastructure config. Produces urgency-scored 10-section document with Bus Factor Dashboard, project inventory, deployment map, costs, access guide, and emergency quick-start. Exports to HTML, PDF, and Markdown."
+    },
+    {
+      "name": "repo-summarizer",
+      "source": "./repo-summarizer",
+      "description": "Deep codebase analysis producing comprehensive handoff documents for CC sessions. Analyzes purpose, features, tech stack, gaps, and architecture across single repos or multi-repo suites. Exports scored reports with maturity assessment to MD, PDF, and HTML."
+    },
+    {
+      "name": "genesis-landing-page-pro",
+      "source": "./genesis-landing-page-pro",
+      "description": "Professional landing page generator with A/B variant testing, AISO/GEO infrastructure, cinema-quality Framer Motion animations, and Banana Squad image integration. Reads your repo to extract product DNA, then generates two complete landing page variants with full AI search optimization stack including llms.txt, WebMCP, JSON-LD schemas, and AgentLayer L1-L7 auditing."
+    },
+    {
+      "name": "ui-polish-pro",
+      "source": "./ui-polish-pro",
+      "description": "Production-quality UI/UX overhaul pipeline for existing apps. Audits routes for design inconsistencies, extracts or generates unified design token systems, then polishes routes with cinema-quality animations, spacing normalization, typography hierarchy, and accessibility improvements - all on an isolated git branch preserving 100% of functional code. Works on full multi-route apps, landing pages, and websites."
     }
   ]
 }
